@@ -7,7 +7,7 @@ if folderPath == 0, return; end
 % ⇨ Bilder und Metadaten laden
 [imgs, metas] = loadImageSequence(folderPath);
 
-% ⇨ Bilder registrieren
+% ⇨ Bilder alignen
 [alignedImgs, tforms] = preprocessImageSequence(imgs);
 
 % ⇨ Gemeinsamer Ausschnitt (automatisch zugeschnitten)
@@ -33,7 +33,7 @@ for i = 1:N
     % Registriert
     subplot(3, N, N + i);
     imshow(alignedImgs{i});
-    title(['Registriert: ', dateStr], 'Interpreter', 'none');
+    title(['Aligned: ', dateStr], 'Interpreter', 'none');
 
     % Zugeschnitten
     subplot(3, N, 2*N + i);
