@@ -13,6 +13,7 @@ function [imgs, metas] = loadImageSequence(folderPath)
     timestamps = zeros(1, numel(names));
     metas = struct('name', {}, 'timestamp', {}, 'year', {}, 'month', {});
 
+    % Metadaten aus Dateinamen extrahieren
     for i = 1:numel(names)
         name = names{i};
         tokens = regexp(name, '(?<year>\d{4})[_\-\.]?(?<month>\d{2})?', 'names');
