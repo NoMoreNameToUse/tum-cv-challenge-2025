@@ -59,6 +59,10 @@ curtainSliderDisplay(app.CroppedImages{startIdx}, app.CroppedImages{endIdx}, tit
 
 ### 2. Side-by-Side Display (`sideBySideDisplay.m`)
 
+#### **Visual Example**
+
+![SidebySide Display Example](Example/sidebyside.png)
+
 #### **Integration Requirements**
 
 **🎯 Target Tab**: `DifferenceHighlightTab` or custom comparison tab
@@ -105,6 +109,10 @@ sideBySideDisplay(app.CroppedImages{leftIdx}, app.CroppedImages{rightIdx}, title
 ---
 
 ### 3. Timelapse Animation (`timelapseAnimation.m`)
+
+#### **Visual Example**
+
+![Timelapse Animation Example](Example/timelapse.png)
 
 #### **Integration Requirements**
 
