@@ -21,7 +21,7 @@ This document provides integration guidelines for three standalone display modul
 **📦 Required UI Components**:
 
 ```matlab
-% Position Control Buttons (Panel_11)
+% Position Control Buttons
 uicontrol('Style', 'pushbutton', 'String', '← Show Left', ...
     'Callback', @(src,evt) resetPosition('left'));
 uicontrol('Style', 'pushbutton', 'String', 'Center', ...
@@ -29,7 +29,7 @@ uicontrol('Style', 'pushbutton', 'String', 'Center', ...
 uicontrol('Style', 'pushbutton', 'String', 'Show Right →', ...
     'Callback', @(src,evt) resetPosition('right'));
 
-% Main Function Buttons (Panel_12)
+% Main Function Buttons
 uicontrol('Style', 'pushbutton', 'String', 'Auto Scan', ...
     'Callback', @autoScanCallback);
 uicontrol('Style', 'pushbutton', 'String', 'Save Scan GIF', ...
@@ -61,7 +61,7 @@ curtainSliderDisplay(app.CroppedImages{startIdx}, app.CroppedImages{endIdx}, tit
 **📦 Required UI Components**:
 
 ```matlab
-% View Control Buttons (Panel_22)
+% View Control Buttons
 uicontrol('Style', 'pushbutton', 'String', 'Reset View', ...
     'Callback', @resetView);
 uicontrol('Style', 'pushbutton', 'String', 'Zoom Tool', ...
@@ -69,15 +69,15 @@ uicontrol('Style', 'pushbutton', 'String', 'Zoom Tool', ...
 uicontrol('Style', 'pushbutton', 'String', 'Pan Tool', ...
     'Callback', @enablePan);
 
-% Sync Control (Panel_17)
+% Sync Control
 app.sync_button = uicontrol('Style', 'pushbutton', 'String', 'Toggle Sync', ...
     'Callback', @toggleSync, 'BackgroundColor', [0.7, 1.0, 0.7]);
 
-% Export Button (Panel_21)
+% Export Button
 uicontrol('Style', 'pushbutton', 'String', 'Save as JPG', ...
     'Callback', @saveImage);
 
-% Dual Display Areas (Panel_14)
+% Dual Display Areas
 app.left_axes = axes('Position', [left_position]);
 app.right_axes = axes('Position', [right_position]);
 ```
@@ -108,7 +108,7 @@ sideBySideDisplay(app.CroppedImages{leftIdx}, app.CroppedImages{rightIdx}, title
 **📦 Required UI Components**:
 
 ```matlab
-% Playback Controls (Panel_23)
+% Playback Controls
 app.play_button = uicontrol('Style', 'pushbutton', 'String', 'Play', ...
     'Callback', @playCallback);
 app.pause_button = uicontrol('Style', 'pushbutton', 'String', 'Pause', ...
@@ -116,25 +116,25 @@ app.pause_button = uicontrol('Style', 'pushbutton', 'String', 'Pause', ...
 app.stop_button = uicontrol('Style', 'pushbutton', 'String', 'Stop', ...
     'Callback', @stopCallback, 'Enable', 'off');
 
-% Frame Navigation (Panel_24)
+% Frame Navigation
 uicontrol('Style', 'pushbutton', 'String', '◀', ...
     'Callback', @(~,~) prevFrame());
 uicontrol('Style', 'pushbutton', 'String', '▶', ...
     'Callback', @(~,~) nextFrame());
 
-% Speed & Loop Controls (Panel_24)
+% Speed & Loop Controls
 uicontrol('Style', 'text', 'String', 'Speed (fps):');
 app.speed_edit = uicontrol('Style', 'edit', 'String', '2', ...
     'Callback', @speedCallback);
 app.loop_checkbox = uicontrol('Style', 'checkbox', 'String', 'Loop Playback', ...
     'Value', 1);
 
-% Frame Slider (Bottom area)
+% Frame Slider
 app.frame_slider = uicontrol('Style', 'slider', 'Min', 1, 'Max', numFrames, ...
     'Callback', @frameSliderCallback);
 app.frame_text = uicontrol('Style', 'text', 'String', 'Frame: 1 / N');
 
-% Export Controls (Panel_25)
+% Export Controls
 uicontrol('Style', 'pushbutton', 'String', 'Export GIF', ...
     'Callback', @exportGIF);
 ```
