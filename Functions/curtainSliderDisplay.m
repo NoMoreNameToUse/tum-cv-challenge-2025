@@ -1,9 +1,9 @@
 function varargout = curtainSliderDisplay(varargin)
-% CURTAINSLIDERDISPLAY - Curtain slider image comparison tool
+% CURTAINSLIDERDISPLAY - Interactive curtain slider image comparison tool
 %
 % ==================================================================================
 % Function Description:
-%   Control "curtain" position through slider to achieve dynamic comparison of two images
+%   Control "curtain" position through MOUSE DRAG to achieve dynamic comparison of two images
 %
 % ==================================================================================
 % Input Parameters:
@@ -21,6 +21,12 @@ function varargout = curtainSliderDisplay(varargin)
 %      - img1, img2: Same as above
 %      - titles: Image title cell array, e.g., {'Left Image', 'Right Image'}
 %      - Custom image title display
+%
+% ==================================================================================
+% Interactive Controls:
+%   - MOUSE DRAG: Click and drag on the image to control curtain position
+%   - LEFT CLICK: Set curtain position at click point
+%   - DRAG: Real-time curtain position update during mouse movement
 %
 % ==================================================================================
 % External Functions:
@@ -53,7 +59,8 @@ if isempty(app_data)
     app_data = struct('folder_mode', false, 'image_files', {{}}, 'display_names', {{}}, ...
                      'processed_imgs', {{}}, 'metas', [], 'is_scanning', false, ...
                      'fig_handle', [], 'main_axes', [], 'img_handle', [], ...
-                     'slider_handle', [], 'scan_button', [], 'popup1', [], 'popup2', []);
+                     'scan_button', [], 'popup1', [], 'popup2', [], ...
+                     'is_dragging', false, 'current_curtain_pos', 0);
 end
 
 % Parse input parameters and determine working mode
@@ -69,6 +76,7 @@ app_data.current_titles = titles;
 app_data.folder_mode = folder_mode;
 app_data.image_width = size(img1, 2);
 app_data.image_height = size(img1, 1);
+app_data.current_curtain_pos = round(app_data.image_width / 2);
 
 % Create user interface and initial display
 createGUI();
@@ -212,57 +220,137 @@ end
 %% ================== Graphical User Interface Creation ==================
     function createGUI()
         % Create main window
-        app_data.fig_handle = figure('Name', 'Curtain Slider Image Comparison Tool (with Preprocessing)', ...
+        app_data.fig_handle = figure('Name', 'Interactive Curtain Slider Image Comparison Tool (Mouse Drag)', ...
             'NumberTitle', 'off', 'Position', [100, 100, 1200, 900], ...
             'Color', 'white', 'MenuBar', 'none', 'ToolBar', 'none', ...
             'Resize', 'off', 'CloseRequestFcn', @(~,~) delete(gcf));
         
-        % Create image display area
-        app_data.main_axes = axes('Position', [0.05, 0.35, 0.9, 0.6], 'XTick', [], 'YTick', []);
+        % Create image display area (larger since no slider needed)
+        app_data.main_axes = axes('Position', [0.05, 0.25, 0.9, 0.7], 'XTick', [], 'YTick', []);
         
         % Initial display of curtain effect
-        curtain_pos = round(app_data.image_width / 2);
+        curtain_pos = app_data.current_curtain_pos;
         combined_img = createCurtainImage(app_data.current_img1, app_data.current_img2, curtain_pos);
         app_data.img_handle = imshow(combined_img, 'Parent', app_data.main_axes);
         
-        % Set title
-        title_str = 'Curtain Slider Image Comparison';
-        if app_data.folder_mode
-            title_str = [title_str ' [Registered and Cropped]'];
-        end
+        % Set title with instruction
+        title_str = 'Slider Display';
+
         title(title_str, 'FontSize', 14, 'FontWeight', 'bold');
         
-        % Create various control components
-        createSliderControls();    % Slider controls
-        createControlButtons();    % Function buttons
+        % Setup interactive mouse controls
+        setupMouseInteraction();
+        
+        % Create control buttons
+        createControlButtons();
         
         % Folder mode requires image selectors
         if app_data.folder_mode
             createImageSelectors();
         end
-        
     end
 
-%% ================== Slider Control Area ==================
-    function createSliderControls()
-        slider_y = 0.25;
+%% ================== Mouse Interaction Setup ==================
+    function setupMouseInteraction()
+        % Set up mouse event handlers for interactive curtain control
         
-        % Main curtain position slider
-        app_data.slider_handle = uicontrol('Style', 'slider', ...
-            'Min', 1, 'Max', app_data.image_width, 'Value', round(app_data.image_width/2), ...
-            'Units', 'normalized', 'Position', [0.1, slider_y, 0.4, 0.03], ...
-            'Callback', @(src,~) updateCurtainImage(round(get(src, 'Value'))));
+        % Mouse button down event - start dragging
+        set(app_data.fig_handle, 'WindowButtonDownFcn', @mouseDownCallback);
+        
+        % Mouse motion event - update curtain position while dragging
+        set(app_data.fig_handle, 'WindowButtonMotionFcn', @mouseMoveCallback);
+        
+        % Mouse button up event - stop dragging
+        set(app_data.fig_handle, 'WindowButtonUpFcn', @mouseUpCallback);
+        
+        % Set cursor style
+        set(app_data.fig_handle, 'Pointer', 'crosshair');
+    end
+
+%% ================== Mouse Event Callbacks ==================
+    function mouseDownCallback(~, ~)
+        % Handle mouse button down event
+        current_point = get(app_data.main_axes, 'CurrentPoint');
+        
+        % Check if click is within image bounds
+        if isPointInAxes(current_point)
+            app_data.is_dragging = true;
+            
+            % Convert axes coordinates to image pixel coordinates
+            curtain_pos = convertAxesToImageCoords(current_point);
+            
+            % Update curtain position
+            updateCurtainPosition(curtain_pos);
+            
+            % Change cursor to indicate dragging mode
+            set(app_data.fig_handle, 'Pointer', 'left');
+        end
+    end
+
+    function mouseMoveCallback(~, ~)
+        % Handle mouse motion event
+        if app_data.is_dragging
+            current_point = get(app_data.main_axes, 'CurrentPoint');
+            
+            % Check if mouse is still within valid range
+            if isPointInAxes(current_point)
+                % Convert coordinates and update curtain
+                curtain_pos = convertAxesToImageCoords(current_point);
+                updateCurtainPosition(curtain_pos);
+            end
+        else
+            % Update cursor based on position
+            current_point = get(app_data.main_axes, 'CurrentPoint');
+            if isPointInAxes(current_point)
+                set(app_data.fig_handle, 'Pointer', 'crosshair');
+            else
+                set(app_data.fig_handle, 'Pointer', 'arrow');
+            end
+        end
+    end
+
+    function mouseUpCallback(~, ~)
+        % Handle mouse button up event
+        app_data.is_dragging = false;
+        set(app_data.fig_handle, 'Pointer', 'crosshair');
+    end
+
+%% ================== Coordinate Conversion Utilities ==================
+    function is_valid = isPointInAxes(current_point)
+        % Check if the current point is within the axes bounds
+        x = current_point(1, 1);
+        y = current_point(1, 2);
+        
+        % Get axes limits
+        xlim = get(app_data.main_axes, 'XLim');
+        ylim = get(app_data.main_axes, 'YLim');
+        
+        is_valid = (x >= xlim(1) && x <= xlim(2) && y >= ylim(1) && y <= ylim(2));
+    end
+
+    function pixel_x = convertAxesToImageCoords(current_point)
+        % Convert axes coordinates to image pixel coordinates
+        x = current_point(1, 1);
+        
+        % Get current axes limits
+        xlim = get(app_data.main_axes, 'XLim');
+        
+        % Convert to pixel coordinate (1-based indexing)
+        pixel_x = round(((x - xlim(1)) / (xlim(2) - xlim(1))) * app_data.image_width + 0.5);
+        
+        % Clamp to valid range
+        pixel_x = max(1, min(app_data.image_width, pixel_x));
     end
 
 %% ================== Function Button Area ==================
     function createControlButtons()
-        control_y = 0.25;
+        control_y = 0.15;
         
         % Curtain position quick control buttons
         position_buttons = {
-            {'← Show Left', [0.58, control_y, 0.08, 0.04], @(src,evt) resetPosition('left')};
-            {'Center', [0.67, control_y, 0.06, 0.04], @(src,evt) resetPosition('center')};
-            {'Show Right →', [0.74, control_y, 0.08, 0.04], @(src,evt) resetPosition('right')};
+            {'← Show Left', [0.3, control_y, 0.08, 0.04], @(src,evt) resetPosition('left')};
+            {'Center', [0.39, control_y, 0.06, 0.04], @(src,evt) resetPosition('center')};
+            {'Show Right →', [0.46, control_y, 0.08, 0.04], @(src,evt) resetPosition('right')};
         };
         
         for i = 1:length(position_buttons)
@@ -274,8 +362,8 @@ end
         % Main function buttons
         function_buttons = {
             {'Reselect Folder', [0.05, 0.08, 0.12, 0.04], @selectNewFolder};
-            {'Auto Scan', [0.58, control_y-0.05, 0.1, 0.04], @autoScanCallback};
-            {'Save Scan GIF', [0.69, control_y-0.05, 0.13, 0.04], @saveAutoScanGIF};
+            {'Auto Scan', [0.56, control_y, 0.1, 0.04], @autoScanCallback};
+            {'Save Scan GIF', [0.67, control_y, 0.13, 0.04], @saveAutoScanGIF};
         };
         
         for i = 1:length(function_buttons)
@@ -290,44 +378,51 @@ end
                     'FontSize', 9, 'Callback', function_buttons{i}{3});
             end
         end
+        
+        % Add instruction text
+        uicontrol('Style', 'text', 'String', 'Instruction: Click and drag on the image to control curtain position', ...
+            'Units', 'normalized', 'Position', [0.05, 0.005, 0.9, 0.025], ...
+            'BackgroundColor', 'white', 'FontSize', 9, 'FontWeight', 'bold', ...
+            'ForegroundColor', [0.2, 0.4, 0.8]);
     end
 
 %% ================== Image Selection ==================
     function createImageSelectors()
-        control_y = 0.15;
+        control_y = 0.04;  % 调整到更低位置，避免与按钮重叠
         
         % Left image selection dropdown
         uicontrol('Style', 'text', 'String', 'Left Image:', ...
-            'Units', 'normalized', 'Position', [0.05, control_y, 0.08, 0.03], ...
-            'BackgroundColor', 'white');
+            'Units', 'normalized', 'Position', [0.05, control_y, 0.08, 0.025], ...
+            'BackgroundColor', 'white', 'FontSize', 9);
         
         app_data.popup1 = uicontrol('Style', 'popupmenu', ...
             'String', app_data.display_names, 'Value', 1, ...
-            'Units', 'normalized', 'Position', [0.14, control_y, 0.25, 0.03], ...
-            'Callback', @(src,~) updateImage(1, src));
+            'Units', 'normalized', 'Position', [0.14, control_y, 0.25, 0.025], ...
+            'FontSize', 8, 'Callback', @(src,~) updateImage(1, src));
         
         % Right image selection dropdown
         uicontrol('Style', 'text', 'String', 'Right Image:', ...
-            'Units', 'normalized', 'Position', [0.41, control_y, 0.08, 0.03], ...
-            'BackgroundColor', 'white');
+            'Units', 'normalized', 'Position', [0.41, control_y, 0.08, 0.025], ...
+            'BackgroundColor', 'white', 'FontSize', 9);
         
         app_data.popup2 = uicontrol('Style', 'popupmenu', ...
             'String', app_data.display_names, ...
             'Value', min(2, length(app_data.display_names)), ...
-            'Units', 'normalized', 'Position', [0.5, control_y, 0.25, 0.03], ...
-            'Callback', @(src,~) updateImage(2, src));
+            'Units', 'normalized', 'Position', [0.5, control_y, 0.25, 0.025], ...
+            'FontSize', 8, 'Callback', @(src,~) updateImage(2, src));
     end
-
 
 %% ================== Display Update Function ==================
     function updateDisplay()
-        % Reset curtain to center position and update display
-        curtain_pos = round(app_data.image_width / 2);
-        updateCurtainImage(curtain_pos);
+        % Update display with current curtain position
+        updateCurtainPosition(app_data.current_curtain_pos);
     end
 
-%% ================== Curtain Image Update ==================
-    function updateCurtainImage(curtain_pos)
+%% ================== Curtain Position Update ==================
+    function updateCurtainPosition(curtain_pos)
+        % Update curtain position and refresh display
+        app_data.current_curtain_pos = curtain_pos;
+        
         % Create curtain effect composite image
         new_img = createCurtainImage(app_data.current_img1, app_data.current_img2, curtain_pos);
         
@@ -354,12 +449,7 @@ end
             app_data.folder_mode = true;
             app_data.image_width = size(new_img1, 2);
             app_data.image_height = size(new_img1, 1);
-            
-            % Update slider range
-            if ishandle(app_data.slider_handle)
-                set(app_data.slider_handle, 'Min', 1, 'Max', app_data.image_width, ...
-                    'Value', round(app_data.image_width/2));
-            end
+            app_data.current_curtain_pos = round(app_data.image_width / 2);
             
             % Rebuild image selectors
             if ishandle(app_data.popup1), delete(app_data.popup1); end
@@ -390,14 +480,10 @@ end
         app_data.image_width = size(app_data.current_img1, 2);
         app_data.image_height = size(app_data.current_img1, 1);
         
-        % Update slider range
-        if ishandle(app_data.slider_handle)
-            current_val = get(app_data.slider_handle, 'Value');
-            new_val = min(current_val, app_data.image_width);
-            set(app_data.slider_handle, 'Min', 1, 'Max', app_data.image_width, 'Value', new_val);
-        end
+        % Reset curtain to center for new images
+        app_data.current_curtain_pos = round(app_data.image_width / 2);
         
-        updateCurtainImage(round(app_data.image_width/2));
+        updateDisplay();
         updateTitles();
     end
 
@@ -405,17 +491,14 @@ end
     function resetPosition(pos_type)
         switch pos_type
             case 'left'
-                new_pos = 1;                           % Fully show left image
+                new_pos = 1;                             % Fully show left image
             case 'center'
-                new_pos = round(app_data.image_width/2); % Center curtain
+                new_pos = round(app_data.image_width/2);   % Center curtain
             case 'right'
-                new_pos = app_data.image_width;        % Fully show right image
+                new_pos = app_data.image_width;          % Fully show right image
         end
         
-        if ishandle(app_data.slider_handle)
-            set(app_data.slider_handle, 'Value', new_pos);
-        end
-        updateCurtainImage(new_pos);
+        updateCurtainPosition(new_pos);
     end
 
     % Auto scan control callback
@@ -450,10 +533,7 @@ end
             if ~ishandle(app_data.fig_handle) || ~app_data.is_scanning
                 break;
             end
-            if ishandle(app_data.slider_handle)
-                set(app_data.slider_handle, 'Value', pos);
-            end
-            updateCurtainImage(pos);
+            updateCurtainPosition(pos);
             pause(0.05);
         end
         
@@ -462,10 +542,7 @@ end
             if ~ishandle(app_data.fig_handle) || ~app_data.is_scanning
                 break;
             end
-            if ishandle(app_data.slider_handle)
-                set(app_data.slider_handle, 'Value', pos);
-            end
-            updateCurtainImage(pos);
+            updateCurtainPosition(pos);
             pause(0.05);
         end
     end
@@ -495,10 +572,7 @@ end
     % Update title display
     function updateTitles()
         if ishandle(app_data.main_axes)
-            title_str = 'Curtain Slider Image Comparison';
-            if app_data.folder_mode
-                title_str = [title_str ' [Registered and Cropped]'];
-            end
+            title_str = 'Slider Display';
             title(title_str, 'FontSize', 14, 'FontWeight', 'bold');
         end
     end
@@ -549,10 +623,7 @@ end
                 break;
             end
             
-            if ishandle(app_data.slider_handle)
-                set(app_data.slider_handle, 'Value', pos);
-            end
-            updateCurtainImage(pos);
+            updateCurtainPosition(pos);
             
             current_img = get(app_data.img_handle, 'CData');
             
@@ -577,10 +648,7 @@ end
                 break;
             end
             
-            if ishandle(app_data.slider_handle)
-                set(app_data.slider_handle, 'Value', pos);
-            end
-            updateCurtainImage(pos);
+            updateCurtainPosition(pos);
             
             current_img = get(app_data.img_handle, 'CData');
             indexed_img = rgb2ind(current_img, gif_colormap, 'dither');
