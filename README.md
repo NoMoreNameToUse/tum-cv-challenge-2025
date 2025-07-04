@@ -13,6 +13,7 @@ This document provides integration guidelines for three standalone display modul
 | **Timelapse Animation** | Time series animation player | Video controls, Adjustable speed, GIF export |
 
 ---
+### 1. Curtain Slider View (`curtainSliderDisplay.m`)
 
 #### **Integration Requirements**
 
