@@ -225,7 +225,7 @@ end
             'Color', 'white', 'MenuBar', 'none', 'ToolBar', 'none', ...
             'Resize', 'off', 'CloseRequestFcn', @(~,~) delete(gcf));
         
-        % Create image display area (larger since no slider needed)
+        % Create image display area
         app_data.main_axes = axes('Position', [0.05, 0.25, 0.9, 0.7], 'XTick', [], 'YTick', []);
         
         % Initial display of curtain effect
@@ -388,7 +388,7 @@ end
 
 %% ================== Image Selection ==================
     function createImageSelectors()
-        control_y = 0.04;  % 调整到更低位置，避免与按钮重叠
+        control_y = 0.04;
         
         % Left image selection dropdown
         uicontrol('Style', 'text', 'String', 'Left Image:', ...
@@ -491,11 +491,11 @@ end
     function resetPosition(pos_type)
         switch pos_type
             case 'left'
-                new_pos = 1;                             % Fully show left image
+                new_pos = 1; % Fully show left image
             case 'center'
-                new_pos = round(app_data.image_width/2);   % Center curtain
+                new_pos = round(app_data.image_width/2); % Center curtain
             case 'right'
-                new_pos = app_data.image_width;          % Fully show right image
+                new_pos = app_data.image_width; % Fully show right image
         end
         
         updateCurtainPosition(new_pos);
@@ -604,9 +604,9 @@ end
         
         % Add red curtain dividing line
         if curtain_pos > 1 && curtain_pos <= w
-            curtain_img(:, curtain_pos, 1) = 255; % Red channel
-            curtain_img(:, curtain_pos, 2) = 0;   % Green channel
-            curtain_img(:, curtain_pos, 3) = 0;   % Blue channel
+            curtain_img(:, curtain_pos, 1) = 255;
+            curtain_img(:, curtain_pos, 2) = 0;
+            curtain_img(:, curtain_pos, 3) = 0;
         end
     end
 
