@@ -15,7 +15,7 @@ This document provides integration guidelines for three standalone display modul
 ---
 ### 1. Curtain Slider View (`curtainSliderDisplay.m`)
 
-#### **Visual Example**
+#### **🖼️ Visual Example**
 
 ![Curtain Slider Example](Example/Slider.png)
 
@@ -55,11 +55,14 @@ uicontrol('Style', 'pushbutton', 'String', 'Save Scan GIF', ...
 curtainSliderDisplay(app.CroppedImages{startIdx}, app.CroppedImages{endIdx}, titles);
 ```
 
+#### **🎬 Functionality Demo**
+![Curtain Slider Demo](GIF/Slider.gif)
+
 ---
 
 ### 2. Side-by-Side Display (`sideBySideDisplay.m`)
 
-#### **Visual Example**
+#### **🖼️ Visual Example**
 
 ![SidebySide Display Example](Example/sidebyside.png)
 
@@ -106,11 +109,14 @@ app.right_axes = axes('Position', [right_position]);
 sideBySideDisplay(app.CroppedImages{leftIdx}, app.CroppedImages{rightIdx}, titles);
 ```
 
+#### **🎬 Functionality Demo**
+![Curtain Slider Demo](GIF/sidebyside.gif)
+
 ---
 
 ### 3. Timelapse Animation (`timelapseAnimation.m`)
 
-#### **Visual Example**
+#### **🖼️ Visual Example**
 
 ![Timelapse Animation Example](Example/timelapse.png)
 
@@ -167,5 +173,8 @@ uicontrol('Style', 'pushbutton', 'String', 'Export GIF', ...
 % From TimelapseTab activation
 timelapseAnimation(app.CroppedImages);  % Pass entire image sequence
 ```
+
+#### **🎬 Functionality Demo**
+![Curtain Slider Demo](GIF/Timelapse.gif)
 
 ---
