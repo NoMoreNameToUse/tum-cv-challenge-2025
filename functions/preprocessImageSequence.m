@@ -25,7 +25,6 @@ function [alignedImgs, tforms] = preprocessImageSequence(imgs)
         [features1, validPts1] = extractFeatures(refGray, pts1);
         [features2, validPts2] = extractFeatures(currGray, pts2);
 
-
         % Matching features between the reference image and the current image
         indexPairs = matchFeatures(features1, features2);
         matched1 = validPts1(indexPairs(:,1));
