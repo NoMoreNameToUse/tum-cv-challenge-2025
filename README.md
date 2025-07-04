@@ -15,6 +15,10 @@ This document provides integration guidelines for three standalone display modul
 ---
 ### 1. Curtain Slider View (`curtainSliderDisplay.m`)
 
+#### **Visual Example**
+
+![Curtain Slider Example](Example/Slider.png)
+
 #### **Integration Requirements**
 
 **🎯 Target Tab**: `SliderViewTab`
