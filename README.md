@@ -55,7 +55,7 @@ uicontrol('Style', 'pushbutton', 'String', 'Save Scan GIF', ...
 curtainSliderDisplay(app.CroppedImages{startIdx}, app.CroppedImages{endIdx}, titles);
 ```
 
-#### **🎬 Functionality Demo**
+#### **🎬 Demo**
 ![Curtain Slider Demo](GIF/Slider.gif)
 
 ---
@@ -109,7 +109,7 @@ app.right_axes = axes('Position', [right_position]);
 sideBySideDisplay(app.CroppedImages{leftIdx}, app.CroppedImages{rightIdx}, titles);
 ```
 
-#### **🎬 Functionality Demo**
+#### **🎬 Demo**
 ![Curtain Slider Demo](GIF/sidebyside.jpg)
 
 ---
@@ -174,7 +174,7 @@ uicontrol('Style', 'pushbutton', 'String', 'Export GIF', ...
 timelapseAnimation(app.CroppedImages);  % Pass entire image sequence
 ```
 
-#### **🎬 Functionality Demo**
+#### **🎬 Demo**
 ![Curtain Slider Demo](GIF/Timelapse.gif)
 
 ---
