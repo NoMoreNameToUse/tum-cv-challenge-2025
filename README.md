@@ -35,8 +35,6 @@ uicontrol('Style', 'pushbutton', 'String', 'Auto Scan', ...
 uicontrol('Style', 'pushbutton', 'String', 'Save Scan GIF', ...
     'Callback', @saveAutoScanGIF);
 
-% Main Display Area (Panel_8)
-% Large axes with mouse event handlers
 ```
 
 **🔧 Core Functions**:
