@@ -272,8 +272,7 @@ end
                     set(app_data.right_axes, 'YLim', right_ylim);
                 end
             catch ME
-                % Handle any synchronization errors silently for stability
-                % Suppress warnings to prevent UI disruption
+
             end
             
             app_data.updating_view = false;
@@ -299,8 +298,7 @@ end
                     set(app_data.left_axes, 'YLim', left_ylim);
                 end
             catch ME
-                % Handle any synchronization errors silently for stability
-                % Suppress warnings to prevent UI disruption
+
             end
             
             app_data.updating_view = false;
@@ -344,7 +342,7 @@ end
 
 %% ================== Image Selectors (Folder Mode) ==================
     function createImageSelectors()
-        % Create image selection dropdown menus (display only in folder mode)
+        % Create image selection dropdown menus
         
         % Left image selector
         uicontrol('Style', 'text', 'String', 'Left Image:', ...
@@ -518,15 +516,15 @@ end
     % Enable zoom tool callback
     function enableZoom(~, ~)
         % Enable zoom mode for both axes
-        set(app_data.pan_obj, 'Enable', 'off');   % Turn off pan first
-        set(app_data.zoom_obj, 'Enable', 'on');   % Enable zoom
+        set(app_data.pan_obj, 'Enable', 'off'); % Turn off pan first
+        set(app_data.zoom_obj, 'Enable', 'on'); % Enable zoom
     end
 
     % Enable pan tool callback  
     function enablePan(~, ~)
         % Enable pan mode for both axes
-        set(app_data.zoom_obj, 'Enable', 'off');  % Turn off zoom first
-        set(app_data.pan_obj, 'Enable', 'on');    % Enable pan
+        set(app_data.zoom_obj, 'Enable', 'off'); % Turn off zoom first
+        set(app_data.pan_obj, 'Enable', 'on'); % Enable pan
     end
 
     % Toggle synchronization callback
