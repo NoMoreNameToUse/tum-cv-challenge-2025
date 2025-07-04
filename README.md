@@ -110,7 +110,7 @@ sideBySideDisplay(app.CroppedImages{leftIdx}, app.CroppedImages{rightIdx}, title
 ```
 
 #### **🎬 Functionality Demo**
-![Curtain Slider Demo](GIF/sidebyside.gif)
+![Curtain Slider Demo](GIF/sidebyside.jpg)
 
 ---
 
