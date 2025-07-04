@@ -1,47 +1,50 @@
-function [alignedImgs, tforms] = preprocessImageSequence(imgs)
-    % Registriert eine Folge von Bildern auf das erste Bild als Referenz.
-    % Gibt die transformierten Bilder (alignedImgs) und die zugehörigen
-    % Affin-Transformationen (tforms) zurück.
+% Docs: By Martin, branch main, commit 6c9757ae96306c14057f532a7159df33619ca35c
 
-    % Referenzbild (erstes Bild) und Graubild
-    
+function [alignedImgs, tforms] = preprocessImageSequence(imgs)
     refImg = imgs{1};
     refGray = rgb2gray(refImg);
 
-    alignedImgs = cell(1, numel(imgs));
+    n = numel(imgs);
+    alignedImgs = cell(1, n);
     alignedImgs{1} = refImg;
-    tforms = cell(1, numel(imgs));
-    tforms{1} = affine2d(eye(3)); % Identity transform for ref
+    tforms = cell(1, n);
+    tforms{1} = affine2d(eye(3)); % identity
 
-    for i = 2:numel(imgs)
+    prevImg = refImg;
+    prevGray = refGray;
+    cumulativeTform = affine2d(eye(3));
+
+    for i = 2:n
         currImg = imgs{i};
         currGray = rgb2gray(currImg);
 
-        % Detecting SURF features in the reference and current images
-        pts1 = detectSURFFeatures(refGray);
+        pts1 = detectSURFFeatures(prevGray);
         pts2 = detectSURFFeatures(currGray);
-
-        % Extracting features from the reference and current images
-        [features1, validPts1] = extractFeatures(refGray, pts1);
+        [features1, validPts1] = extractFeatures(prevGray, pts1);
         [features2, validPts2] = extractFeatures(currGray, pts2);
 
-        % Matching features between the reference image and the current image
-        indexPairs = matchFeatures(features1, features2);
+        indexPairs = matchFeatures(features1, features2, 'Unique', true);
+
+        if size(indexPairs,1) < 3
+            warning("Zu wenige Matches (%d), überspringe Bild %d.", size(indexPairs,1), i);
+            tforms{i} = tforms{i-1}; % gleiche wie vorher
+            alignedImgs{i} = imwarp(currImg, tforms{i}, 'OutputView', imref2d(size(refImg)), 'FillValues', NaN);
+            continue
+        end
+
         matched1 = validPts1(indexPairs(:,1));
         matched2 = validPts2(indexPairs(:,2));
 
-        % RANSAC-basierte Schätzung einer affinen Transformation
-        tform = estimateGeometricTransform2D(matched2, matched1, 'affine', ...
-    'MaxNumTrials', 5000, ...
-    'Confidence', 99.9, ...
-    'MaxDistance', 4);
-        outputView = imref2d(size(refImg));
-        aligned = imwarp(currImg, tform, 'OutputView', outputView, 'FillValues', NaN); %Bilder transformieren 
+        tformRel = estimateGeometricTransform2D(matched2, matched1, 'affine', ...
+            'MaxNumTrials', 5000, 'Confidence', 95, 'MaxDistance', 4);
 
+        % Akkumuliere Transformation
+        cumulativeTform.T = tformRel.T * cumulativeTform.T;
+        tforms{i} = cumulativeTform;
 
-        alignedImgs{i} = aligned;
-        tforms{i} = tform;
+        alignedImgs{i} = imwarp(currImg, cumulativeTform, 'OutputView', imref2d(size(refImg)), 'FillValues', NaN);
+
+        % Setze dieses Bild als neues "prev"
+        prevGray = currGray;
     end
-
-
 end
