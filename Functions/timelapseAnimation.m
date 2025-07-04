@@ -226,9 +226,9 @@ end
             catch
                 % Use placeholder image if a file fails to load
                 if i > 1
-                    image_data{i} = image_data{i-1};  % Copy previous frame
+                    image_data{i} = image_data{i-1}; % Copy previous frame
                 else
-                    image_data{i} = zeros(480, 640, 3, 'uint8');  % Black placeholder
+                    image_data{i} = zeros(480, 640, 3, 'uint8'); % Black placeholder
                 end
                 warning('timelapseAnimation:ImageLoadFailed', ...
                         'Unable to load image: %s', image_files{i});
@@ -262,8 +262,8 @@ end
         updateTitle();
         
         % Create interface control components
-        createPlaybackControls();  % Playback control area
-        createControlButtons();    % Function button area
+        createPlaybackControls(); % Playback control area
+        createControlButtons(); % Function button area
     end
 
 %% ================== Playback Control Area ==================
@@ -378,8 +378,8 @@ end
     % Calculate slider step size
     function slider_step = calculateSliderStep()
         if app_data.total_frames > 1
-            step1 = 1/(app_data.total_frames-1);  % Single step size
-            step2 = max(0.1, step1);              % Page step size
+            step1 = 1/(app_data.total_frames-1); % Single step size
+            step2 = max(0.1, step1); % Page step size
             slider_step = [step1, step2];
         else
             slider_step = [1, 1];
@@ -518,14 +518,14 @@ end
 
     function stopCallback(~, ~)
         stopPlayback();
-        updateCurrentFrame(1);  % Return to first frame
+        updateCurrentFrame(1); % Return to first frame
     end
 
     % Speed setting callback
     function speedCallback(src, ~)
         new_fps = str2double(get(src, 'String'));
         if isnan(new_fps) || new_fps <= 0
-            set(src, 'String', '2');  % Restore default value
+            set(src, 'String', '2'); % Restore default value
         elseif new_fps > 1000
             set(src, 'String', '1000');
             msgbox('Maximum speed is 1000 fps', 'Speed Limit');
@@ -542,9 +542,9 @@ end
         if next_idx > app_data.total_frames
             % Check if loop playback is enabled
             if ishandle(app_data.loop_checkbox) && get(app_data.loop_checkbox, 'Value')
-                next_idx = 1;  % Return to first frame
+                next_idx = 1; % Return to first frame
             else
-                pauseCallback();  % Stop playback
+                pauseCallback(); % Stop playback
                 return;
             end
         end
