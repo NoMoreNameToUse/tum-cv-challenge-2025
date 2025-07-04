@@ -1,5 +1,4 @@
 function DifferenceHighlight
-    % Advanced Difference Analysis Tool - Fixed Professional Version
     
     % Global variables
     originalImgs = {};
