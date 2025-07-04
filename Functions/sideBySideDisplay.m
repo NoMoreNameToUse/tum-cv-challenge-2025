@@ -1,9 +1,16 @@
 function varargout = sideBySideDisplay(varargin)
-% SIDEBYSIDEDISPLAY - Side-by-side image comparison tool (with image preprocessing)
+% SIDEBYSIDEDISPLAY - Synchronized side-by-side image comparison tool
 %
 % ==================================================================================
 % Function Description:
-%   Display two images side by side for intuitive comparison and analysis
+%   Display two images side by side with SYNCHRONIZED zoom and pan operations
+%
+% ==================================================================================
+% Key Features:
+%   - Synchronized zoom: Zoom on left/right image, the other follows automatically
+%   - Synchronized pan: Pan on one side, the other side moves accordingly  
+%   - Coordinate mapping: Accurate position correspondence between images
+%   - Independent or linked view modes
 %
 % ==================================================================================
 % Input Parameters:
@@ -54,7 +61,8 @@ persistent app_data
 if isempty(app_data)
     % Initialize application data structure
     app_data = struct('folder_mode', false, 'image_files', {{}}, 'display_names', {{}}, ...
-                     'processed_imgs', {{}}, 'metas', []);
+                     'processed_imgs', {{}}, 'metas', [], 'sync_enabled', true, ...
+                     'updating_view', false);
 end
 
 % Parse input parameters and determine working mode
@@ -65,6 +73,10 @@ app_data.current_img1 = img1;
 app_data.current_img2 = img2;
 app_data.current_titles = titles;
 app_data.folder_mode = folder_mode;
+
+% Calculate scale factors for coordinate mapping
+app_data.scale_x = size(img2, 2) / size(img1, 2);  % Width scale factor
+app_data.scale_y = size(img2, 1) / size(img1, 1);  % Height scale factor
 
 % Create user interface and initial display
 createGUI();
@@ -159,9 +171,6 @@ end
 %% ================== Display Name Generator ==================
     function names = createDisplayNames(metas)
         % Create friendly display names based on metadata
-        % Input: metas - Metadata structure array containing year, month, filename
-        % Output: names - Formatted display name cell array
-        
         names = cell(1, length(metas));
         for i = 1:length(metas)
             if ~isnan(metas(i).year)
@@ -181,10 +190,7 @@ end
 
 %% ================== Image Loader ==================
     function img_data = loadImage(img_input)
-        % Unified image loading function, supports file path or image data input
-        % Input: img_input - File path (string) or image data (matrix)
-        % Output: img_data - Standardized double format image data
-        
+        % Unified image loading function
         if ischar(img_input) || isstring(img_input)
             % Load image from file
             img_data = im2double(imread(img_input));
@@ -199,13 +205,17 @@ end
         % Create main window and all interface components
         
         % Create main window
-        app_data.fig_handle = figure('Name', 'Side-by-Side Image Comparison Tool (with Preprocessing)', ...
-            'NumberTitle', 'off', 'Position', [100, 100, 1200, 700], ...
+        app_data.fig_handle = figure('Name', 'Synchronized Side-by-Side Image Comparison Tool', ...
+            'NumberTitle', 'off', 'Position', [100, 100, 1400, 700], ...
             'Color', 'white', 'MenuBar', 'none', 'ToolBar', 'none', ...
             'CloseRequestFcn', @(~,~) delete(gcf));
         
-        % Create image display area (occupying most space)
-        app_data.main_axes = axes('Position', [0.05, 0.25, 0.9, 0.7]);
+        % Create separate axes for left and right images
+        app_data.left_axes = axes('Position', [0.05, 0.25, 0.42, 0.7]);
+        app_data.right_axes = axes('Position', [0.53, 0.25, 0.42, 0.7]);
+        
+        % Setup synchronized zoom and pan
+        setupSynchronizedView();
         
         % Create function button area
         createControlButtons();
@@ -221,6 +231,82 @@ end
         end
     end
 
+%% ================== Synchronized View Setup ==================
+    function setupSynchronizedView()
+        % Setup event listeners for synchronized zoom and pan operations
+        
+        % Initialize zoom and pan objects for the figure
+        app_data.zoom_obj = zoom(app_data.fig_handle);
+        app_data.pan_obj = pan(app_data.fig_handle);
+        
+        % Set initial zoom and pan state to off
+        set(app_data.zoom_obj, 'Enable', 'off');
+        set(app_data.pan_obj, 'Enable', 'off');
+        
+        % Add event listeners for left axes (zoom and pan)
+        addlistener(app_data.left_axes, 'XLim', 'PostSet', @(src,evt) syncFromLeft('XLim'));
+        addlistener(app_data.left_axes, 'YLim', 'PostSet', @(src,evt) syncFromLeft('YLim'));
+        
+        % Add event listeners for right axes (zoom and pan)
+        addlistener(app_data.right_axes, 'XLim', 'PostSet', @(src,evt) syncFromRight('XLim'));
+        addlistener(app_data.right_axes, 'YLim', 'PostSet', @(src,evt) syncFromRight('YLim'));
+    end
+
+%% ================== Synchronization Event Handlers ==================
+    function syncFromLeft(property)
+        % Synchronize right axes when left axes changes
+        if app_data.sync_enabled && ~app_data.updating_view
+            app_data.updating_view = true;
+            
+            try
+                if strcmp(property, 'XLim')
+                    % Synchronize X axis (horizontal position and zoom)
+                    left_xlim = get(app_data.left_axes, 'XLim');
+                    right_xlim = left_xlim * app_data.scale_x;
+                    set(app_data.right_axes, 'XLim', right_xlim);
+                    
+                elseif strcmp(property, 'YLim')
+                    % Synchronize Y axis (vertical position and zoom)
+                    left_ylim = get(app_data.left_axes, 'YLim');
+                    right_ylim = left_ylim * app_data.scale_y;
+                    set(app_data.right_axes, 'YLim', right_ylim);
+                end
+            catch ME
+                % Handle any synchronization errors silently for stability
+                % Suppress warnings to prevent UI disruption
+            end
+            
+            app_data.updating_view = false;
+        end
+    end
+
+    function syncFromRight(property)
+        % Synchronize left axes when right axes changes
+        if app_data.sync_enabled && ~app_data.updating_view
+            app_data.updating_view = true;
+            
+            try
+                if strcmp(property, 'XLim')
+                    % Synchronize X axis (horizontal position and zoom)
+                    right_xlim = get(app_data.right_axes, 'XLim');
+                    left_xlim = right_xlim / app_data.scale_x;
+                    set(app_data.left_axes, 'XLim', left_xlim);
+                    
+                elseif strcmp(property, 'YLim')
+                    % Synchronize Y axis (vertical position and zoom)
+                    right_ylim = get(app_data.right_axes, 'YLim');
+                    left_ylim = right_ylim / app_data.scale_y;
+                    set(app_data.left_axes, 'YLim', left_ylim);
+                end
+            catch ME
+                % Handle any synchronization errors silently for stability
+                % Suppress warnings to prevent UI disruption
+            end
+            
+            app_data.updating_view = false;
+        end
+    end
+
 %% ================== Function Button Area ==================
     function createControlButtons()
         % Create unified layout for all function buttons
@@ -228,17 +314,32 @@ end
         % Button configuration: {display text, position [x,y,w,h], callback function}
         buttons = {
             {'Reselect Folder', [0.02, 0.15, 0.12, 0.05], @selectNewFolder};
-            {'Save as JPG', [0.15, 0.15, 0.12, 0.05], @saveImage};
-            {'Reset View', [0.28, 0.15, 0.1, 0.05], @resetView};
-            {'Zoom Tool', [0.39, 0.15, 0.1, 0.05], @(~,~) zoom(gcf, 'on')};
+            {'Save as JPG', [0.15, 0.15, 0.1, 0.05], @saveImage};
+            {'Reset View', [0.26, 0.15, 0.08, 0.05], @resetView};
+            {'Zoom Tool', [0.35, 0.15, 0.08, 0.05], @enableZoom};
+            {'Pan Tool', [0.44, 0.15, 0.08, 0.05], @enablePan};
+            {'Toggle Sync', [0.53, 0.15, 0.1, 0.05], @toggleSync};
         };
         
         % Batch create buttons
         for i = 1:length(buttons)
-            uicontrol('Style', 'pushbutton', 'String', buttons{i}{1}, ...
-                'Units', 'normalized', 'Position', buttons{i}{2}, ...
-                'Callback', buttons{i}{3});
+            if i == 6  % Toggle Sync button
+                app_data.sync_button = uicontrol('Style', 'pushbutton', 'String', buttons{i}{1}, ...
+                    'Units', 'normalized', 'Position', buttons{i}{2}, ...
+                    'Callback', buttons{i}{3}, 'BackgroundColor', [0.7, 1.0, 0.7]);
+            else
+                uicontrol('Style', 'pushbutton', 'String', buttons{i}{1}, ...
+                    'Units', 'normalized', 'Position', buttons{i}{2}, ...
+                    'Callback', buttons{i}{3});
+            end
         end
+        
+        % Add instruction text
+        uicontrol('Style', 'text', ...
+            'String', 'Instructions: Use Zoom/Pan tools to navigate. Synchronization keeps both images aligned.', ...
+            'Units', 'normalized', 'Position', [0.65, 0.15, 0.33, 0.05], ...
+            'BackgroundColor', 'white', 'FontSize', 9, 'FontWeight', 'bold', ...
+            'ForegroundColor', [0.2, 0.4, 0.8], 'HorizontalAlignment', 'left');
     end
 
 %% ================== Image Selectors (Folder Mode) ==================
@@ -269,43 +370,57 @@ end
 
 %% ================== Display Update Function ==================
     function updateDisplay()
-        % Update main image display content
+        % Update main image display content with separate axes
         
-        % Convert to uint8 format
+        % Convert to uint8 format for display
         img1_display = im2uint8(app_data.current_img1);
         img2_display = im2uint8(app_data.current_img2);
         
-        % Create side-by-side image: horizontally concatenate two images
-        combined_img = [img1_display, img2_display];
+        % Disable synchronization during image update
+        app_data.updating_view = true;
         
-        % Display composite image in axes
-        imshow(combined_img, 'Parent', app_data.main_axes);
+        % Display left image
+        imshow(img1_display, 'Parent', app_data.left_axes);
+        title(app_data.left_axes, app_data.current_titles{1}, 'FontSize', 11, 'FontWeight', 'bold');
         
-        % Add red dividing line to mark boundary between two images
-        hold(app_data.main_axes, 'on');
-        w = size(img1_display, 2);  % Width of first image
-        h = size(img1_display, 1);  % Image height
-        line([w, w], [1, h], 'Color', 'red', 'LineWidth', 2, 'Parent', app_data.main_axes);
-        hold(app_data.main_axes, 'off');
+        % Display right image  
+        imshow(img2_display, 'Parent', app_data.right_axes);
+        title(app_data.right_axes, app_data.current_titles{2}, 'FontSize', 11, 'FontWeight', 'bold');
         
-        % Set title display
-        title_str = sprintf('%s  |  %s', app_data.current_titles{1}, app_data.current_titles{2});
+        % Add preprocessing indicator to titles if in folder mode
         if app_data.folder_mode
-            title_str = ['[Registered and Cropped] ' title_str];
+            title(app_data.left_axes, ['[Registered & Cropped] ' app_data.current_titles{1}], ...
+                'FontSize', 10, 'FontWeight', 'bold');
+            title(app_data.right_axes, ['[Registered & Cropped] ' app_data.current_titles{2}], ...
+                'FontSize', 10, 'FontWeight', 'bold');
         end
-        title(title_str, 'FontSize', 12, 'FontWeight', 'bold');
+        
+        % Re-enable synchronization
+        app_data.updating_view = false;
         
         % Update image information display
         updateImageInfo();
+        
+        % Update scale factors for new images
+        app_data.scale_x = size(img2_display, 2) / size(img1_display, 2);
+        app_data.scale_y = size(img2_display, 1) / size(img1_display, 1);
     end
 
 %% ================== Information Display Update ==================
     function updateImageInfo()
         % Update bottom image information text
         if ishandle(app_data.info_text)
-            info_str = sprintf('Left: %dx%d  |  Right: %dx%d', ...
+            info_str = sprintf('Left: %dx%d  |  Right: %dx%d  |  Scale: %.3fx, %.3fy', ...
                 size(app_data.current_img1, 2), size(app_data.current_img1, 1), ...
-                size(app_data.current_img2, 2), size(app_data.current_img2, 1));
+                size(app_data.current_img2, 2), size(app_data.current_img2, 1), ...
+                app_data.scale_x, app_data.scale_y);
+            
+            if app_data.sync_enabled
+                info_str = [info_str ' | Sync: ON'];
+            else
+                info_str = [info_str ' | Sync: OFF'];
+            end
+            
             if app_data.folder_mode
                 info_str = [info_str ' | Images automatically registered and cropped'];
             end
@@ -317,7 +432,6 @@ end
 
     % Reselect folder callback
     function selectNewFolder(~, ~)
-        % Reselect folder and perform preprocessing
         try
             [new_img1, new_img2, new_titles] = loadAndProcessFromFolder();
             
@@ -336,7 +450,6 @@ end
             updateDisplay();
             
         catch ME
-            % Display error only if not user cancellation
             if ~strcmp(ME.message, 'User cancelled folder selection')
                 errordlg(['Processing error: ' ME.message], 'Error');
             end
@@ -345,10 +458,7 @@ end
 
     % Image selection callback (folder mode)
     function updateImage(side, src)
-        % Update left or right displayed image
-        % Input: side - 1 for left, 2 for right
-        
-        idx = get(src, 'Value');  % Get selected image index
+        idx = get(src, 'Value');
         
         if side == 1
             % Update left image
@@ -388,15 +498,51 @@ end
 
     % Reset view callback
     function resetView(~, ~)
-        % Reset image display to original state
+        % Reset both image displays to original state
+        app_data.updating_view = true;
         
-        % Reset axes properties
-        axis(app_data.main_axes, 'image');  % Restore original aspect ratio
-        zoom(app_data.fig_handle, 'off');   % Turn off zoom mode
-        pan(app_data.fig_handle, 'off');    % Turn off pan mode
+        % Turn off zoom and pan modes
+        set(app_data.zoom_obj, 'Enable', 'off');
+        set(app_data.pan_obj, 'Enable', 'off');
         
-        % Redisplay image
+        % Reset both axes properties
+        axis(app_data.left_axes, 'image');
+        axis(app_data.right_axes, 'image');
+        
+        app_data.updating_view = false;
+        
+        % Redisplay images
         updateDisplay();
+    end
+
+    % Enable zoom tool callback
+    function enableZoom(~, ~)
+        % Enable zoom mode for both axes
+        set(app_data.pan_obj, 'Enable', 'off');   % Turn off pan first
+        set(app_data.zoom_obj, 'Enable', 'on');   % Enable zoom
+    end
+
+    % Enable pan tool callback  
+    function enablePan(~, ~)
+        % Enable pan mode for both axes
+        set(app_data.zoom_obj, 'Enable', 'off');  % Turn off zoom first
+        set(app_data.pan_obj, 'Enable', 'on');    % Enable pan
+    end
+
+    % Toggle synchronization callback
+    function toggleSync(~, ~)
+        % Toggle synchronization on/off
+        app_data.sync_enabled = ~app_data.sync_enabled;
+        
+        % Update button appearance
+        if app_data.sync_enabled
+            set(app_data.sync_button, 'String', 'Sync: ON', 'BackgroundColor', [0.7, 1.0, 0.7]);
+        else
+            set(app_data.sync_button, 'String', 'Sync: OFF', 'BackgroundColor', [1.0, 0.7, 0.7]);
+        end
+        
+        % Update info display
+        updateImageInfo();
     end
 
 end
