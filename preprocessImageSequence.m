@@ -1,4 +1,5 @@
 function [alignedImgs, tforms] = preprocessImageSequence(imgs)
+    rng(10);
     refImg = imgs{1};
     refGray = rgb2gray(refImg);
 
@@ -18,6 +19,14 @@ function [alignedImgs, tforms] = preprocessImageSequence(imgs)
 
         pts1 = detectSURFFeatures(prevGray);
         pts2 = detectSURFFeatures(currGray);
+
+        % Stempelfilterung: entferne Features im unteren Rand (z. B. 10 %)
+        h1 = size(prevGray,1);
+        h2 = size(currGray,1);
+        margin = round(0.05 * h1);  % z. B. 5 % des Bildes
+
+        pts1 = pts1(pts1.Location(:,2) < (h1 - margin));
+        pts2 = pts2(pts2.Location(:,2) < (h2 - margin));
         [features1, validPts1] = extractFeatures(prevGray, pts1);
         [features2, validPts2] = extractFeatures(currGray, pts2);
 
@@ -38,8 +47,50 @@ function [alignedImgs, tforms] = preprocessImageSequence(imgs)
         matched1 = validPts1(indexPairs(:,1));
         matched2 = validPts2(indexPairs(:,2));
 
-        tformRel = estimateGeometricTransform2D(matched2, matched1, 'affine', ...
-            'MaxNumTrials', 10000, 'Confidence', 99, 'MaxDistance', 10);
+        tformRel = [];
+        success = false;
+
+        % Versuche affine Transformation
+        if size(indexPairs,1) >= 3
+            try
+                [tformRel, inlierIdx] = estimateGeometricTransform2D(matched2, matched1, ...
+                    'affine', 'MaxNumTrials', 10000, 'Confidence', 99, 'MaxDistance', 2);
+                
+                                % LO-RANSAC: Rechne Least Squares auf den Inliers
+                if numel(inlierIdx) >= 3
+                    matched1_inliers = matched1(inlierIdx);
+                    matched2_inliers = matched2(inlierIdx);
+                    tformRel = fitgeotrans(matched2_inliers.Location, matched1_inliers.Location, 'affine');
+                else
+                    tformRel = tformRansac;
+                end
+                if rcond(tformRel.T(1:2,1:2)) >= 1e-6 && numel(inlierIdx) >= 10
+                    success = true;
+                end
+            catch
+                % affine failed
+            end
+        end
+
+        % Fallback: similarity transform
+        if ~success && size(indexPairs,1) >= 2
+            try
+                [tformRel, inlierIdx] = estimateGeometricTransform2D(matched2, matched1, ...
+                    'similarity', 'MaxNumTrials', 10000, 'Confidence', 99.9, 'MaxDistance', 2);
+                if rcond(tformRel.T(1:2,1:2)) >= 1e-6
+                    success = true;
+                    fprintf("Bild %d: fallback auf similarity\n", i);
+                end
+            catch
+                % similarity failed
+            end
+        end
+
+        % Fallback: keine Transformation
+        if ~success
+            warning("Bild %d: Verwende Identity-Transform als Fallback.", i);
+            tformRel = affine2d(eye(3));
+        end
 
         % Akkumuliere Transformation
         cumulativeTform.T = tformRel.T * cumulativeTform.T;
