@@ -21,7 +21,12 @@ function [alignedImgs, tforms] = preprocessImageSequence(imgs)
         [features1, validPts1] = extractFeatures(prevGray, pts1);
         [features2, validPts2] = extractFeatures(currGray, pts2);
 
-        indexPairs = matchFeatures(features1, features2, 'Unique', true);
+        indexPairs = matchFeatures(features1, features2, ...
+    'Method', 'Exhaustive', ...        
+    'MaxRatio', 0.85, ...
+    'MatchThreshold', 10, ...
+    'Metric','SAD', ...
+    'Unique', true);
 
         if size(indexPairs,1) < 3
             warning("Zu wenige Matches (%d), überspringe Bild %d.", size(indexPairs,1), i);
@@ -34,7 +39,7 @@ function [alignedImgs, tforms] = preprocessImageSequence(imgs)
         matched2 = validPts2(indexPairs(:,2));
 
         tformRel = estimateGeometricTransform2D(matched2, matched1, 'affine', ...
-            'MaxNumTrials', 5000, 'Confidence', 95, 'MaxDistance', 4);
+            'MaxNumTrials', 10000, 'Confidence', 99, 'MaxDistance', 10);
 
         % Akkumuliere Transformation
         cumulativeTform.T = tformRel.T * cumulativeTform.T;
