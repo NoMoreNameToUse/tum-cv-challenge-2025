@@ -713,7 +713,7 @@ function AdvancedDifferenceTool
             axes(ax4);
             cla(ax4);
             imshow(heatmapImg);
-            title(ax4, sprintf('Thermal Heatmap (Warm=Inc, Cool=Dec, Th: %.2f)', currentThreshold), 'FontSize', 11);
+            title(ax4, sprintf('Heatmap (Warm=Inc, Cool=Dec, Th: %.2f)', currentThreshold), 'FontSize', 11);
             
             displayStatistics(diff, increase, decrease, significantChange);
             updateStatus('Thermal heatmap completed!');
@@ -801,7 +801,7 @@ function AdvancedDifferenceTool
             imshow(resultImg);
             
             % Updated title with filled regions
-            title(ax4, sprintf('Highlight Filled (Yellow=Inc, Red=Dec, Th: %.2f)', currentThreshold), 'FontSize', 11);
+            title(ax4, sprintf('Highlight (Yellow=Inc, Red=Dec, Th: %.2f)', currentThreshold), 'FontSize', 11);
             
             displayStatistics(diff, increase, decrease, significantChange);
             updateStatus('Highlight completed!');
