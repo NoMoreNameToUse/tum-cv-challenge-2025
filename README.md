@@ -49,3 +49,6 @@ GUI V0.2:
 * Updated the preprocessImageSequence.m implementation from martin to the newest version
 * Dataset name now shown alongside image file names due to new dataset naming convention
 * Cleaned up some internal copy pasta variable and GUI update sequence
+
+GUI V0.3: 
+* Implemented slider view from Kai's GUI Revamp with original code from Rongfei
