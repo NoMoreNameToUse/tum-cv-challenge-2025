@@ -1,5 +1,5 @@
 function AdvancedDifferenceTool
-    % Advanced Difference Analysis Tool - Enhanced Professional Version with Improved Visualization
+    % Advanced Difference Analysis Tool - Simplified Version (Remove Rate Only & Rate Threshold Controls)
     
     % Global variables
     originalImgs = {};
@@ -16,6 +16,7 @@ function AdvancedDifferenceTool
     isHighlightOn = false;
     isIncreaseOnlyOn = false;
     isDecreaseOnlyOn = false;
+    isComprehensiveMode = false; % Comprehensive mode combining size + rate
     
     % UI control handles
     statusText = [];
@@ -23,6 +24,7 @@ function AdvancedDifferenceTool
     img2Popup = [];
     thresholdSlider = [];
     thresholdText = [];
+    comprehensiveToggle = []; % Toggle for comprehensive mode
     heatmapToggle = [];
     highlightToggle = [];
     flickBtn = [];
@@ -38,8 +40,8 @@ function AdvancedDifferenceTool
     ax4 = [];
     ax5 = [];
     
-    % Create main interface - enhanced layout
-    fig = figure('Name', 'Advanced Difference Analysis Tool - Enhanced Professional Edition', ...
+    % Create main interface - simplified layout
+    fig = figure('Name', 'Advanced Difference Analysis Tool - Simplified Version', ...
                  'Position', [50, 50, 1600, 900], ...
                  'MenuBar', 'none', 'ToolBar', 'none', ...
                  'Color', [0.96, 0.96, 0.96], ...
@@ -49,29 +51,29 @@ function AdvancedDifferenceTool
     createInterface();
     
     function createInterface()
-        % Enhanced control panel - increased height and better spacing
+        % Control panel - adjusted height for simplified controls
         controlPanel = uipanel('Parent', fig, 'Title', 'Control Panel', ...
-                              'Position', [0.01, 0.75, 0.98, 0.24], ...
+                              'Position', [0.01, 0.72, 0.98, 0.27], ...
                               'FontSize', 16, 'FontWeight', 'bold', ...
                               'BackgroundColor', [0.94, 0.94, 0.94]);
         
-        % Image display panel - adjusted for new control panel size
+        % Image display panel
         imagePanel = uipanel('Parent', fig, 'Title', 'Image Display Area', ...
-                            'Position', [0.01, 0.01, 0.98, 0.73], ...
+                            'Position', [0.01, 0.01, 0.98, 0.70], ...
                             'FontSize', 16, 'FontWeight', 'bold', ...
                             'BackgroundColor', [0.98, 0.98, 0.98]);
         
-        createEnhancedControlPanel(controlPanel);
+        createSimplifiedControlPanel(controlPanel);
         createImagePanel(imagePanel);
     end
     
-    function createEnhancedControlPanel(controlPanel)
-        % Row 1: File Operations (Top row) - using normalized coordinates
+    function createSimplifiedControlPanel(controlPanel)
+        % Row 1: File Operations (Top row)
         
         % Load folder button
         uicontrol('Parent', controlPanel, 'Style', 'pushbutton', ...
                   'String', 'Load Folder', 'Units', 'normalized', ...
-                  'Position', [0.02, 0.7, 0.12, 0.25], ...
+                  'Position', [0.02, 0.8, 0.12, 0.18], ...
                   'FontSize', 12, 'FontWeight', 'bold', ...
                   'BackgroundColor', [0.2, 0.5, 0.8], 'ForegroundColor', 'white', ...
                   'Callback', @loadFolder);
@@ -79,125 +81,117 @@ function AdvancedDifferenceTool
         % Status text
         statusText = uicontrol('Parent', controlPanel, 'Style', 'text', ...
                               'String', 'Status: Ready to load images', ...
-                              'Units', 'normalized', 'Position', [0.15, 0.7, 0.4, 0.25], ...
+                              'Units', 'normalized', 'Position', [0.15, 0.8, 0.4, 0.18], ...
                               'FontSize', 11, 'HorizontalAlignment', 'left', ...
                               'BackgroundColor', [0.94, 0.94, 0.94], ...
                               'ForegroundColor', [0, 0.4, 0]);
         
-        % Pipeline info
-        uicontrol('Parent', controlPanel, 'Style', 'text', ...
-                  'String', 'Pipeline: Alignment → Cropping → Brightness Normalization', ...
-                  'Units', 'normalized', 'Position', [0.56, 0.8, 0.22, 0.15], ...
-                  'FontSize', 9, 'HorizontalAlignment', 'left', ...
-                  'BackgroundColor', [0.94, 0.94, 0.94], 'ForegroundColor', [0, 0.5, 0]);
-        
-        % Tools section - enhanced with GIF save
+        % Tools section
         uicontrol('Parent', controlPanel, 'Style', 'text', ...
                   'String', 'Tools:', 'Units', 'normalized', ...
-                  'Position', [0.80, 0.85, 0.06, 0.15], ...
+                  'Position', [0.80, 0.85, 0.06, 0.13], ...
                   'FontSize', 10, 'FontWeight', 'bold', 'HorizontalAlignment', 'left', ...
                   'BackgroundColor', [0.94, 0.94, 0.94]);
         
         uicontrol('Parent', controlPanel, 'Style', 'pushbutton', ...
                   'String', 'Reset', 'Units', 'normalized', ...
-                  'Position', [0.78, 0.7, 0.05, 0.2], ...
+                  'Position', [0.78, 0.8, 0.05, 0.15], ...
                   'FontSize', 9, 'Callback', @resetDisplay);
         
         uicontrol('Parent', controlPanel, 'Style', 'pushbutton', ...
                   'String', 'Save', 'Units', 'normalized', ...
-                  'Position', [0.84, 0.7, 0.05, 0.2], ...
+                  'Position', [0.84, 0.8, 0.05, 0.15], ...
                   'FontSize', 9, 'Callback', @saveResults);
         
-        % NEW: Save GIF button
         uicontrol('Parent', controlPanel, 'Style', 'pushbutton', ...
                   'String', 'Save GIF', 'Units', 'normalized', ...
-                  'Position', [0.90, 0.7, 0.05, 0.2], ...
+                  'Position', [0.90, 0.8, 0.05, 0.15], ...
                   'FontSize', 9, 'FontWeight', 'bold', ...
                   'BackgroundColor', [0.8, 0.2, 0.2], 'ForegroundColor', 'white', ...
                   'Callback', @saveFlickAsGIF);
         
         uicontrol('Parent', controlPanel, 'Style', 'pushbutton', ...
                   'String', 'Export', 'Units', 'normalized', ...
-                  'Position', [0.96, 0.7, 0.03, 0.2], ...
+                  'Position', [0.96, 0.8, 0.03, 0.15], ...
                   'FontSize', 9, 'Callback', @exportData);
         
-        % Row 2: Image Selection and Parameters (Middle row)
+        % Row 2: Image Selection and Basic Parameters
         
         % Image selection
         uicontrol('Parent', controlPanel, 'Style', 'text', ...
                   'String', 'Image Selection:', 'Units', 'normalized', ...
-                  'Position', [0.02, 0.45, 0.12, 0.15], ...
+                  'Position', [0.02, 0.6, 0.12, 0.12], ...
                   'FontSize', 11, 'FontWeight', 'bold', 'HorizontalAlignment', 'left', ...
                   'BackgroundColor', [0.94, 0.94, 0.94]);
         
         uicontrol('Parent', controlPanel, 'Style', 'text', ...
                   'String', 'Image A:', 'Units', 'normalized', ...
-                  'Position', [0.02, 0.25, 0.06, 0.15], ...
+                  'Position', [0.02, 0.45, 0.06, 0.12], ...
                   'FontSize', 10, 'FontWeight', 'bold', 'HorizontalAlignment', 'left', ...
                   'BackgroundColor', [0.94, 0.94, 0.94]);
         
         img1Popup = uicontrol('Parent', controlPanel, 'Style', 'popupmenu', ...
                              'String', {'Load images first'}, 'Units', 'normalized', ...
-                             'Position', [0.08, 0.25, 0.18, 0.15], ...
+                             'Position', [0.08, 0.45, 0.18, 0.12], ...
                              'FontSize', 9, 'Callback', @selectImage1);
         
         uicontrol('Parent', controlPanel, 'Style', 'text', ...
                   'String', 'Image B:', 'Units', 'normalized', ...
-                  'Position', [0.28, 0.25, 0.06, 0.15], ...
+                  'Position', [0.28, 0.45, 0.06, 0.12], ...
                   'FontSize', 10, 'FontWeight', 'bold', 'HorizontalAlignment', 'left', ...
                   'BackgroundColor', [0.94, 0.94, 0.94]);
         
         img2Popup = uicontrol('Parent', controlPanel, 'Style', 'popupmenu', ...
                              'String', {'Load images first'}, 'Units', 'normalized', ...
-                             'Position', [0.34, 0.25, 0.18, 0.15], ...
+                             'Position', [0.34, 0.45, 0.18, 0.12], ...
                              'FontSize', 9, 'Callback', @selectImage2);
         
-        % Threshold control
+        % Basic Threshold control
         uicontrol('Parent', controlPanel, 'Style', 'text', ...
                   'String', 'Threshold:', 'Units', 'normalized', ...
-                  'Position', [0.54, 0.45, 0.08, 0.15], ...
+                  'Position', [0.54, 0.6, 0.12, 0.12], ...
                   'FontSize', 10, 'FontWeight', 'bold', 'HorizontalAlignment', 'left', ...
                   'BackgroundColor', [0.94, 0.94, 0.94]);
         
         thresholdSlider = uicontrol('Parent', controlPanel, 'Style', 'slider', ...
                                    'Min', 0, 'Max', 1, 'Value', 0.1, ...
-                                   'Units', 'normalized', 'Position', [0.54, 0.25, 0.15, 0.15], ...
+                                   'Units', 'normalized', 'Position', [0.54, 0.45, 0.12, 0.12], ...
                                    'Callback', @updateThreshold);
         
         thresholdText = uicontrol('Parent', controlPanel, 'Style', 'text', ...
                                  'String', '0.10', 'Units', 'normalized', ...
-                                 'Position', [0.70, 0.25, 0.04, 0.15], ...
+                                 'Position', [0.67, 0.45, 0.04, 0.12], ...
                                  'FontSize', 10, 'HorizontalAlignment', 'center', ...
                                  'BackgroundColor', [1, 1, 1]);
         
-        % Change indicators - adjusted positions to avoid overlap
+        % Change indicators
         uicontrol('Parent', controlPanel, 'Style', 'text', ...
                   'String', 'Indicators:', 'Units', 'normalized', ...
-                  'Position', [0.76, 0.45, 0.10, 0.15], ...
+                  'Position', [0.73, 0.6, 0.10, 0.12], ...
                   'FontSize', 10, 'FontWeight', 'bold', 'HorizontalAlignment', 'left', ...
                   'BackgroundColor', [0.94, 0.94, 0.94]);
         
         increaseLamp = uicontrol('Parent', controlPanel, 'Style', 'text', ...
                                 'String', '●', 'Units', 'normalized', ...
-                                'Position', [0.75, 0.35, 0.05, 0.14], ...
+                                'Position', [0.73, 0.47, 0.05, 0.12], ...
                                 'FontSize', 18, 'HorizontalAlignment', 'center', ...
                                 'ForegroundColor', [0.5, 0.5, 0.5], 'BackgroundColor', [0.94, 0.94, 0.94]);
         
         uicontrol('Parent', controlPanel, 'Style', 'text', ...
                   'String', 'Inc', 'Units', 'normalized', ...
-                  'Position', [0.79, 0.33, 0.04, 0.12], ...
+                  'Position', [0.77, 0.45, 0.04, 0.12], ...
                   'FontSize', 9, 'HorizontalAlignment', 'left', ...
                   'BackgroundColor', [0.94, 0.94, 0.94]);
         
         decreaseLamp = uicontrol('Parent', controlPanel, 'Style', 'text', ...
                                 'String', '●', 'Units', 'normalized', ...
-                                'Position', [0.83, 0.35, 0.05, 0.14], ...
+                                'Position', [0.73, 0.32, 0.05, 0.12], ...
                                 'FontSize', 18, 'HorizontalAlignment', 'center', ...
                                 'ForegroundColor', [0.5, 0.5, 0.5], 'BackgroundColor', [0.94, 0.94, 0.94]);
         
         uicontrol('Parent', controlPanel, 'Style', 'text', ...
                   'String', 'Dec', 'Units', 'normalized', ...
-                  'Position', [0.87, 0.33, 0.04, 0.12], ...
+                  'Position', [0.77, 0.30, 0.04, 0.12], ...
                   'FontSize', 9, 'HorizontalAlignment', 'left', ...
                   'BackgroundColor', [0.94, 0.94, 0.94]);
         
@@ -210,17 +204,25 @@ function AdvancedDifferenceTool
                   'FontSize', 11, 'FontWeight', 'bold', 'HorizontalAlignment', 'left', ...
                   'BackgroundColor', [0.94, 0.94, 0.94]);
         
-        % Main analysis toggles
+        % Comprehensive Heatmap toggle - Keep original comprehensive functionality
+        comprehensiveToggle = uicontrol('Parent', controlPanel, 'Style', 'togglebutton', ...
+                                       'String', 'Superimposed Heatmap', 'Units', 'normalized', ...
+                                       'Position', [0.18, 0.02, 0.10, 0.18], ...
+                                       'FontSize', 9, 'FontWeight', 'bold', ...
+                                       'BackgroundColor', [0.8, 0.9, 0.8], ...
+                                       'ForegroundColor', [0, 0.6, 0], ...
+                                       'Callback', @toggleComprehensiveMap);
+        
         heatmapToggle = uicontrol('Parent', controlPanel, 'Style', 'togglebutton', ...
-                                 'String', 'Heatmap', 'Units', 'normalized', ...
-                                 'Position', [0.18, 0.02, 0.08, 0.18], ...
-                                 'FontSize', 10, 'FontWeight', 'bold', ...
+                                 'String', 'Basic Heatmap', 'Units', 'normalized', ...
+                                 'Position', [0.29, 0.02, 0.08, 0.18], ...
+                                 'FontSize', 9, 'FontWeight', 'bold', ...
                                  'BackgroundColor', [0.9, 0.9, 0.9], ...
                                  'Callback', @toggleHeatmap);
         
         highlightToggle = uicontrol('Parent', controlPanel, 'Style', 'togglebutton', ...
                                    'String', 'Highlight', 'Units', 'normalized', ...
-                                   'Position', [0.27, 0.02, 0.08, 0.18], ...
+                                   'Position', [0.38, 0.02, 0.08, 0.18], ...
                                    'FontSize', 10, 'FontWeight', 'bold', ...
                                    'BackgroundColor', [0.9, 0.9, 0.9], ...
                                    'Callback', @toggleHighlight);
@@ -228,24 +230,24 @@ function AdvancedDifferenceTool
         % Specific analysis buttons
         uicontrol('Parent', controlPanel, 'Style', 'pushbutton', ...
                   'String', 'Increase', 'Units', 'normalized', ...
-                  'Position', [0.36, 0.02, 0.08, 0.18], ...
-                  'FontSize', 10, 'Callback', @showIncreaseOnly);
+                  'Position', [0.47, 0.02, 0.06, 0.18], ...
+                  'FontSize', 9, 'Callback', @showIncreaseOnly);
         
         uicontrol('Parent', controlPanel, 'Style', 'pushbutton', ...
                   'String', 'Decrease', 'Units', 'normalized', ...
-                  'Position', [0.45, 0.02, 0.08, 0.18], ...
-                  'FontSize', 10, 'Callback', @showDecreaseOnly);
+                  'Position', [0.54, 0.02, 0.06, 0.18], ...
+                  'FontSize', 9, 'Callback', @showDecreaseOnly);
         
         % Flick control
         uicontrol('Parent', controlPanel, 'Style', 'text', ...
                   'String', 'Flick:', 'Units', 'normalized', ...
-                  'Position', [0.55, 0.05, 0.05, 0.12], ...
+                  'Position', [0.62, 0.05, 0.05, 0.12], ...
                   'FontSize', 10, 'FontWeight', 'bold', 'HorizontalAlignment', 'left', ...
                   'BackgroundColor', [0.94, 0.94, 0.94]);
         
         flickBtn = uicontrol('Parent', controlPanel, 'Style', 'togglebutton', ...
                             'String', 'Start', 'Units', 'normalized', ...
-                            'Position', [0.61, 0.02, 0.06, 0.18], ...
+                            'Position', [0.68, 0.02, 0.06, 0.18], ...
                             'FontSize', 10, 'FontWeight', 'bold', ...
                             'BackgroundColor', [0.9, 0.9, 0.9], ...
                             'Callback', @toggleFlick);
@@ -253,18 +255,18 @@ function AdvancedDifferenceTool
         % Flick speed control
         uicontrol('Parent', controlPanel, 'Style', 'text', ...
                   'String', 'Speed:', 'Units', 'normalized', ...
-                  'Position', [0.68, 0.12, 0.05, 0.08], ...
+                  'Position', [0.75, 0.12, 0.05, 0.08], ...
                   'FontSize', 9, 'HorizontalAlignment', 'left', ...
                   'BackgroundColor', [0.94, 0.94, 0.94]);
         
         flickSpeedSlider = uicontrol('Parent', controlPanel, 'Style', 'slider', ...
                                     'Min', 0.1, 'Max', 1, 'Value', 0.5, ...
-                                    'Units', 'normalized', 'Position', [0.68, 0.02, 0.08, 0.08], ...
+                                    'Units', 'normalized', 'Position', [0.75, 0.02, 0.08, 0.08], ...
                                     'Callback', @updateFlickSpeed);
         
         flickSpeedText = uicontrol('Parent', controlPanel, 'Style', 'text', ...
                                   'String', '0.5s', 'Units', 'normalized', ...
-                                  'Position', [0.77, 0.02, 0.03, 0.08], ...
+                                  'Position', [0.84, 0.02, 0.03, 0.08], ...
                                   'FontSize', 9, 'HorizontalAlignment', 'center', ...
                                   'BackgroundColor', [1, 1, 1]);
     end
@@ -294,7 +296,6 @@ function AdvancedDifferenceTool
         ax5 = axes('Parent', imagePanel, 'Position', [0.52, 0.05, 0.45, 0.45]);
         title(ax5, 'Flick Display (Earlier ↔ Changes)', 'FontSize', 13, 'FontWeight', 'bold');
         axis(ax5, 'off');
-        % ax5 (flick display) does not have zoom functionality
     end
     
     function enableMouseWheelZoom(axHandle)
@@ -386,15 +387,13 @@ function AdvancedDifferenceTool
         newXLim = [xCenter - newXRange/2, xCenter + newXRange/2];
         newYLim = [yCenter - newYRange/2, yCenter + newYRange/2];
         
-        % Constrain limits to image boundaries to ensure image fills the axes
-        % For X limits
+        % Constrain limits to image boundaries
         if newXLim(1) < 0.5
             newXLim = [0.5, newXRange + 0.5];
         elseif newXLim(2) > imgWidth + 0.5
             newXLim = [imgWidth + 0.5 - newXRange, imgWidth + 0.5];
         end
         
-        % For Y limits
         if newYLim(1) < 0.5
             newYLim = [0.5, newYRange + 0.5];
         elseif newYLim(2) > imgHeight + 0.5
@@ -428,6 +427,121 @@ function AdvancedDifferenceTool
             laterImg = processedImgs{idx1};
             isImg1Earlier = false;
         end
+    end
+    
+    % Function to calculate time-weighted change rate analysis between two time points
+    function [changeRateMap, hasIncrease, hasDecrease] = calculateChangeRateAnalysis(startIdx, endIdx)
+        % Get all images between start and end indices (inclusive)
+        timestamps = [metaData.timestamp];
+        startTime = timestamps(startIdx);
+        endTime = timestamps(endIdx);
+        
+        % Find all indices in the time range and sort them
+        timeRangeIndices = find(timestamps >= startTime & timestamps <= endTime);
+        [sortedTimestamps, sortOrder] = sort(timestamps(timeRangeIndices));
+        timeRangeIndices = timeRangeIndices(sortOrder);
+        
+        updateStatus(sprintf('Analyzing time-weighted change rate across %d images...', length(timeRangeIndices)));
+        
+        if length(timeRangeIndices) < 2
+            % Not enough images for rate analysis
+            changeRateMap = zeros(size(rgb2gray(processedImgs{startIdx})));
+            hasIncrease = false;
+            hasDecrease = false;
+            return;
+        end
+        
+        % Initialize weighted accumulation maps
+        [h, w] = size(rgb2gray(processedImgs{timeRangeIndices(1)}));
+        increaseRateMap = zeros(h, w);
+        decreaseRateMap = zeros(h, w);
+        totalTimeSpan = sortedTimestamps(end) - sortedTimestamps(1);
+        
+        if totalTimeSpan == 0
+            totalTimeSpan = 1; % Prevent division by zero
+        end
+        
+        % Use a fixed change rate threshold based on the basic threshold
+        changeRateThreshold = currentThreshold * 3; % 3x the basic threshold for rate filtering
+        
+        % Calculate time-weighted change rates between consecutive images
+        for i = 1:(length(timeRangeIndices) - 1)
+            idx1 = timeRangeIndices(i);
+            idx2 = timeRangeIndices(i + 1);
+            
+            img1 = processedImgs{idx1};
+            img2 = processedImgs{idx2};
+            
+            gray1 = rgb2gray(img1);
+            gray2 = rgb2gray(img2);
+            
+            diff = abs(gray2 - gray1);
+            increase = gray2 > gray1;
+            decrease = gray2 < gray1;
+            significantChange = diff > currentThreshold;
+            
+            % Calculate time information for this interval
+            intervalStartTime = sortedTimestamps(i);
+            intervalEndTime = sortedTimestamps(i + 1);
+            intervalDuration = intervalEndTime - intervalStartTime;
+            if intervalDuration == 0
+                intervalDuration = 1; % Prevent division by zero
+            end
+            
+            % Calculate temporal position: how early this change occurs
+            % Earlier changes get higher weights (faster change rate)
+            normalizedStartTime = (intervalStartTime - sortedTimestamps(1)) / totalTimeSpan;
+            
+            % Time weight: earlier changes (smaller normalizedStartTime) get higher weights
+            % Using exponential decay: earlier = higher weight
+            timeWeight = exp(-3 * normalizedStartTime); % Exponential decay factor
+            
+            % Calculate change magnitude weighted by time
+            changeMagnitude = diff .* double(significantChange);
+            
+            % Change rate = (change magnitude × time weight) / interval duration
+            intervalChangeRate = (changeMagnitude * timeWeight) / intervalDuration;
+            
+            % Accumulate weighted change rates
+            increaseRegion = increase & significantChange;
+            decreaseRegion = decrease & significantChange;
+            
+            increaseRateMap = increaseRateMap + intervalChangeRate .* double(increaseRegion);
+            decreaseRateMap = decreaseRateMap + intervalChangeRate .* double(decreaseRegion);
+        end
+        
+        % Normalize change rates to [0, 1] range for consistent thresholding
+        maxIncreaseRate = max(increaseRateMap(:));
+        maxDecreaseRate = max(decreaseRateMap(:));
+        
+        if maxIncreaseRate > 0
+            increaseRateMap = increaseRateMap / maxIncreaseRate;
+        end
+        if maxDecreaseRate > 0
+            decreaseRateMap = decreaseRateMap / maxDecreaseRate;
+        end
+        
+        % Apply change rate threshold to filter fast vs slow changes
+        fastIncreaseRegions = increaseRateMap > (changeRateThreshold / currentThreshold / 10); % Adjusted for fixed threshold
+        fastDecreaseRegions = decreaseRateMap > (changeRateThreshold / currentThreshold / 10);
+        
+        % Determine if there are significant fast changes
+        hasIncrease = any(fastIncreaseRegions(:));
+        hasDecrease = any(fastDecreaseRegions(:));
+        
+        % Create final output maps showing only fast-changing regions
+        finalIncreaseRate = increaseRateMap .* double(fastIncreaseRegions);
+        finalDecreaseRate = decreaseRateMap .* double(fastDecreaseRegions);
+        
+        changeRateMap = struct();
+        changeRateMap.increaseRate = finalIncreaseRate;
+        changeRateMap.decreaseRate = finalDecreaseRate;
+        changeRateMap.totalRate = finalIncreaseRate + finalDecreaseRate;
+        changeRateMap.numIntervals = length(timeRangeIndices) - 1;
+        changeRateMap.totalTimeSpan = totalTimeSpan;
+        
+        updateStatus(sprintf('Time-weighted change rate analysis completed for %d intervals (span: %.0f years)', ...
+                    changeRateMap.numIntervals, totalTimeSpan/100));
     end
     
     % Callback functions
@@ -529,7 +643,9 @@ function AdvancedDifferenceTool
     
     function updateAnalysisIfNeeded()
         % Update analysis based on current active mode
-        if isHeatmapOn
+        if isComprehensiveMode
+            showComprehensiveMap();
+        elseif isHeatmapOn
             showHeatmap();
         elseif isHighlightOn
             showHighlight();
@@ -540,19 +656,46 @@ function AdvancedDifferenceTool
         end
     end
     
+    % Toggle for comprehensive map - KEEP ORIGINAL FUNCTIONALITY
+    function toggleComprehensiveMap(~, ~)
+        if get(comprehensiveToggle, 'Value')
+            isComprehensiveMode = true;
+            isHeatmapOn = false;
+            isHighlightOn = false;
+            isIncreaseOnlyOn = false;
+            isDecreaseOnlyOn = false;
+            set(comprehensiveToggle, 'String', 'Hide Superimposed');
+            set(heatmapToggle, 'Value', 0);
+            set(heatmapToggle, 'String', 'Basic Heatmap');
+            set(highlightToggle, 'Value', 0);
+            set(highlightToggle, 'String', 'Highlight');
+            showComprehensiveMap();
+        else
+            isComprehensiveMode = false;
+            set(comprehensiveToggle, 'String', 'Superimposed Map');
+            axes(ax4);
+            cla(ax4);
+            title(ax4, 'Difference Analysis Results', 'FontSize', 13, 'FontWeight', 'bold');
+            updateLamps(false, false);
+        end
+    end
+    
     function toggleHeatmap(~, ~)
         if get(heatmapToggle, 'Value')
             isHeatmapOn = true;
             isHighlightOn = false;
             isIncreaseOnlyOn = false;
             isDecreaseOnlyOn = false;
-            set(heatmapToggle, 'String', 'Hide Heatmap');
+            isComprehensiveMode = false;
+            set(heatmapToggle, 'String', 'Hide Basic Heatmap');
             set(highlightToggle, 'Value', 0);
             set(highlightToggle, 'String', 'Highlight');
+            set(comprehensiveToggle, 'Value', 0);
+            set(comprehensiveToggle, 'String', 'Superimposed Map');
             showHeatmap();
         else
             isHeatmapOn = false;
-            set(heatmapToggle, 'String', 'Heatmap');
+            set(heatmapToggle, 'String', 'Basic Heatmap');
             axes(ax4);
             cla(ax4);
             title(ax4, 'Difference Analysis Results', 'FontSize', 13, 'FontWeight', 'bold');
@@ -566,9 +709,12 @@ function AdvancedDifferenceTool
             isHeatmapOn = false;
             isIncreaseOnlyOn = false;
             isDecreaseOnlyOn = false;
+            isComprehensiveMode = false;
             set(highlightToggle, 'String', 'Hide Highlight');
             set(heatmapToggle, 'Value', 0);
-            set(heatmapToggle, 'String', 'Heatmap');
+            set(heatmapToggle, 'String', 'Basic Heatmap');
+            set(comprehensiveToggle, 'Value', 0);
+            set(comprehensiveToggle, 'String', 'superimposed Map');
             showHighlight();
         else
             isHighlightOn = false;
@@ -580,6 +726,237 @@ function AdvancedDifferenceTool
             currentHighlightImg = [];
         end
     end
+    
+    % KEEP ORIGINAL comprehensive map functionality combining change magnitude and rate
+    function showComprehensiveMap(~, ~)
+        if isempty(processedImgs) || selectedImg1 == selectedImg2
+            msgbox('Please load images and select two different images', 'Warning');
+            set(comprehensiveToggle, 'Value', 0);
+            set(comprehensiveToggle, 'String', 'superimposed Map');
+            isComprehensiveMode = false;
+            return;
+        end
+        
+        try
+            % Set current mode
+            isComprehensiveMode = true;
+            isHeatmapOn = false;
+            isHighlightOn = false;
+            isIncreaseOnlyOn = false;
+            isDecreaseOnlyOn = false;
+            
+            updateStatus('Calculating superimposed map...');
+            
+            % 1. Calculate basic change magnitude
+            img1 = processedImgs{selectedImg1};
+            img2 = processedImgs{selectedImg2};
+            
+            gray1 = rgb2gray(img1);
+            gray2 = rgb2gray(img2);
+            diff = abs(gray2 - gray1);
+            
+            increase = gray2 > gray1;
+            decrease = gray2 < gray1;
+            significantChange = diff > currentThreshold;
+            
+            % 2. Calculate change rate analysis
+            [rateData, hasIncrease, hasDecrease] = calculateChangeRateAnalysis(selectedImg1, selectedImg2);
+            
+            updateLamps(hasIncrease, hasDecrease);
+            
+            % 3. Create comprehensive color map
+            [h, w, ~] = size(img1);
+            comprehensiveImg = zeros(h, w, 3);
+            
+            % Normalize magnitude for intensity scaling
+            maxDiff = max(diff(:));
+            if maxDiff > 0
+                normalizedMagnitude = diff / maxDiff;
+            else
+                normalizedMagnitude = zeros(size(diff));
+            end
+            
+            % Get rate maps
+            increaseRate = rateData.increaseRate;
+            decreaseRate = rateData.decreaseRate;
+            
+            % Color encoding scheme:
+            % - Hue: Direction and Speed combined
+            % - Saturation: Change magnitude 
+            % - Value: Overall intensity
+            
+            for i = 1:h
+                for j = 1:w
+                    if significantChange(i, j)
+                        magnitude = normalizedMagnitude(i, j);
+                        
+                        if increase(i, j)
+                            % Increase regions: Red to Orange spectrum
+                            rate = increaseRate(i, j);
+                            
+                            if rate > 0.7  % Very fast increase - Pure Red
+                                comprehensiveImg(i, j, 1) = 1.0 * magnitude;
+                                comprehensiveImg(i, j, 2) = 0.0;
+                                comprehensiveImg(i, j, 3) = 0.0;
+                            elseif rate > 0.4  % Medium fast increase - Red-Orange
+                                comprehensiveImg(i, j, 1) = 1.0 * magnitude;
+                                comprehensiveImg(i, j, 2) = 0.3 * magnitude;
+                                comprehensiveImg(i, j, 3) = 0.0;
+                            elseif rate > 0.1  % Slow increase - Orange
+                                comprehensiveImg(i, j, 1) = 1.0 * magnitude;
+                                comprehensiveImg(i, j, 2) = 0.6 * magnitude;
+                                comprehensiveImg(i, j, 3) = 0.0;
+                            else  % Very slow increase - Yellow-Orange
+                                comprehensiveImg(i, j, 1) = 1.0 * magnitude;
+                                comprehensiveImg(i, j, 2) = 0.8 * magnitude;
+                                comprehensiveImg(i, j, 3) = 0.2 * magnitude;
+                            end
+                            
+                        elseif decrease(i, j)
+                            % Decrease regions: Blue to Cyan spectrum
+                            rate = decreaseRate(i, j);
+                            
+                            if rate > 0.7  % Very fast decrease - Pure Blue
+                                comprehensiveImg(i, j, 1) = 0.0;
+                                comprehensiveImg(i, j, 2) = 0.0;
+                                comprehensiveImg(i, j, 3) = 1.0 * magnitude;
+                            elseif rate > 0.4  % Medium fast decrease - Blue-Cyan
+                                comprehensiveImg(i, j, 1) = 0.0;
+                                comprehensiveImg(i, j, 2) = 0.3 * magnitude;
+                                comprehensiveImg(i, j, 3) = 1.0 * magnitude;
+                            elseif rate > 0.1  % Slow decrease - Cyan
+                                comprehensiveImg(i, j, 1) = 0.0;
+                                comprehensiveImg(i, j, 2) = 0.6 * magnitude;
+                                comprehensiveImg(i, j, 3) = 1.0 * magnitude;
+                            else  % Very slow decrease - Light Cyan
+                                comprehensiveImg(i, j, 1) = 0.2 * magnitude;
+                                comprehensiveImg(i, j, 2) = 0.8 * magnitude;
+                                comprehensiveImg(i, j, 3) = 1.0 * magnitude;
+                            end
+                        end
+                    end
+                end
+            end
+            
+            % 4. Display the comprehensive map
+            axes(ax4);
+            cla(ax4);
+            imshow(comprehensiveImg);
+            title(ax4, sprintf('Superimposed Heatmap (Th: %.2f)', currentThreshold), 'FontSize', 10);
+            
+            % 5. Add color legend
+            addComprehensiveColorLegend();
+            
+            % 6. Display statistics
+            displayComprehensiveStatistics(diff, increase, decrease, significantChange, rateData);
+            updateStatus('superimposed map completed! Check color legend for interpretation.');
+            
+        catch ME
+            updateStatus('superimposed map failed');
+            errordlg(['superimposed map failed: ' ME.message], 'Error');
+            updateLamps(false, false);
+        end
+    end
+    
+    % Add color legend for comprehensive map
+    function addComprehensiveColorLegend()
+        % Create a small legend in the corner of the axes
+        hold(ax4, 'on');
+        
+        % Get current axes limits
+        xlim_curr = get(ax4, 'XLim');
+        ylim_curr = get(ax4, 'YLim');
+        
+        % Legend position (top-right corner)
+        legendWidth = (xlim_curr(2) - xlim_curr(1)) * 0.15;
+        legendHeight = (ylim_curr(2) - ylim_curr(1)) * 0.25;
+        legendX = xlim_curr(2) - legendWidth - 10;
+        legendY = ylim_curr(1) + 10;
+        
+        % Background rectangle for legend
+        rectangle('Position', [legendX-5, legendY-5, legendWidth+10, legendHeight+10], ...
+                 'FaceColor', [0, 0, 0, 0.8], 'EdgeColor', 'white', 'LineWidth', 1);
+        
+        % Color samples and labels
+        sampleSize = legendHeight / 8;
+        
+        % Fast increase - Red
+        rectangle('Position', [legendX, legendY, sampleSize, sampleSize], ...
+                 'FaceColor', [1, 0, 0], 'EdgeColor', 'none');
+        text(legendX + sampleSize + 2, legendY + sampleSize/2, 'Fast Inc', ...
+             'Color', 'white', 'FontSize', 7, 'VerticalAlignment', 'middle');
+        
+        % Slow increase - Orange
+        rectangle('Position', [legendX, legendY + sampleSize*1.5, sampleSize, sampleSize], ...
+                 'FaceColor', [1, 0.6, 0], 'EdgeColor', 'none');
+        text(legendX + sampleSize + 2, legendY + sampleSize*2, 'Slow Inc', ...
+             'Color', 'white', 'FontSize', 7, 'VerticalAlignment', 'middle');
+        
+        % Fast decrease - Blue
+        rectangle('Position', [legendX, legendY + sampleSize*3, sampleSize, sampleSize], ...
+                 'FaceColor', [0, 0, 1], 'EdgeColor', 'none');
+        text(legendX + sampleSize + 2, legendY + sampleSize*3.5, 'Fast Dec', ...
+             'Color', 'white', 'FontSize', 7, 'VerticalAlignment', 'middle');
+        
+        % Slow decrease - Cyan
+        rectangle('Position', [legendX, legendY + sampleSize*4.5, sampleSize, sampleSize], ...
+                 'FaceColor', [0, 0.6, 1], 'EdgeColor', 'none');
+        text(legendX + sampleSize + 2, legendY + sampleSize*5, 'Slow Dec', ...
+             'Color', 'white', 'FontSize', 7, 'VerticalAlignment', 'middle');
+        
+        % Brightness note
+        text(legendX, legendY + sampleSize*6.5, 'Brightness =', ...
+             'Color', 'white', 'FontSize', 6, 'FontWeight', 'bold');
+        text(legendX, legendY + sampleSize*7.2, 'Change Size', ...
+             'Color', 'white', 'FontSize', 6, 'FontWeight', 'bold');
+        
+        hold(ax4, 'off');
+    end
+    
+    % Display comprehensive statistics
+    % 只需要修改 displayComprehensiveStatistics 函数
+% Display comprehensive statistics
+function displayComprehensiveStatistics(diff, increase, decrease, significantChange, rateData)
+    totalPixels = numel(diff);
+    changedPixels = sum(significantChange(:));
+    increasedPixels = sum(increase(:) & significantChange(:));
+    decreasedPixels = sum(decrease(:) & significantChange(:));
+    
+    % Fast vs slow changes
+    fastIncreasePixels = sum(rateData.increaseRate(:) > 0.4);
+    slowIncreasePixels = sum(rateData.increaseRate(:) > 0 & rateData.increaseRate(:) <= 0.4);
+    fastDecreasePixels = sum(rateData.decreaseRate(:) > 0.4);
+    slowDecreasePixels = sum(rateData.decreaseRate(:) > 0 & rateData.decreaseRate(:) <= 0.4);
+    
+    % Determine temporal order for statistics display
+    [~, ~, isImg1Earlier] = getTemporalOrder(selectedImg1, selectedImg2);
+    
+    % 计算实际对比的图片数量
+    timestamps = [metaData.timestamp];
+    startTime = timestamps(selectedImg1);
+    endTime = timestamps(selectedImg2);
+    timeRangeIndices = find(timestamps >= min(startTime, endTime) & timestamps <= max(startTime, endTime));
+    numComparedImages = length(timeRangeIndices);
+    
+    fprintf('=== Comprehensive Analysis Statistics ===\n');
+    if isImg1Earlier
+        fprintf('Temporal Range: %s → %s\n', imgNames{selectedImg1}, imgNames{selectedImg2});
+    else
+        fprintf('Temporal Range: %s → %s\n', imgNames{selectedImg2}, imgNames{selectedImg1});
+    end
+    fprintf('Images compared: %d\n', numComparedImages);  % 新增这一行
+    fprintf('Total pixels: %d\n', totalPixels);
+    fprintf('Changed pixels: %d (%.2f%%)\n', changedPixels, (changedPixels/totalPixels)*100);
+    fprintf('--- Increases ---\n');
+    fprintf('  Fast increases: %d (%.2f%%) - RED\n', fastIncreasePixels, (fastIncreasePixels/totalPixels)*100);
+    fprintf('  Slow increases: %d (%.2f%%) - ORANGE\n', slowIncreasePixels, (slowIncreasePixels/totalPixels)*100);
+    fprintf('--- Decreases ---\n');
+    fprintf('  Fast decreases: %d (%.2f%%) - BLUE\n', fastDecreasePixels, (fastDecreasePixels/totalPixels)*100);
+    fprintf('  Slow decreases: %d (%.2f%%) - CYAN\n', slowDecreasePixels, (slowDecreasePixels/totalPixels)*100);
+    fprintf('Magnitude threshold: %.2f\n', currentThreshold);
+    fprintf('Color brightness reflects change magnitude\n');
+    fprintf('======================================\n');
+end
     
     function showHeatmap(~, ~)
         if isempty(processedImgs) || selectedImg1 == selectedImg2
@@ -596,6 +973,7 @@ function AdvancedDifferenceTool
             isHighlightOn = false;
             isIncreaseOnlyOn = false;
             isDecreaseOnlyOn = false;
+            isComprehensiveMode = false;
             
             updateStatus('Calculating thermal-style heatmap...');
             
@@ -610,7 +988,7 @@ function AdvancedDifferenceTool
             decrease = gray2 < gray1;
             significantChange = diff > currentThreshold;
             
-            % Additional filtering: Remove very small changes (less than 1.5x threshold)
+            % Additional filtering: Remove very small changes
             strongSignificantChange = diff > (currentThreshold * 1.5);
             significantChange = significantChange & strongSignificantChange;
             
@@ -623,10 +1001,7 @@ function AdvancedDifferenceTool
             [h, w, ~] = size(img1);
             heatmapImg = zeros(h, w, 3);
             
-            % Set black background for thermal imaging effect
-            % Keep background as black (zeros)
-            
-            % Process increase regions with warm color gradient (Red → Orange → Yellow)
+            % Process increase regions with warm color gradient
             increaseRegion = increase & significantChange;
             if any(increaseRegion(:))
                 intensityMap = zeros(size(gray1));
@@ -634,33 +1009,28 @@ function AdvancedDifferenceTool
                 maxIncreaseIntensity = max(intensityMap(:));
                 
                 if maxIncreaseIntensity > 0
-                    % Normalize intensity from 0 to 1
                     normalizedIntensity = intensityMap / maxIncreaseIntensity;
                     
-                    % Create warm color gradient for each pixel
                     for i = 1:h
                         for j = 1:w
                             if increaseRegion(i, j)
                                 intensity = normalizedIntensity(i, j);
                                 
                                 if intensity <= 0.33
-                                    % Dark red to red (0 to 0.33)
                                     factor = intensity / 0.33;
-                                    heatmapImg(i, j, 1) = 0.3 + 0.7 * factor;  % Red: 0.3 → 1.0
-                                    heatmapImg(i, j, 2) = 0;                   % Green: 0
-                                    heatmapImg(i, j, 3) = 0;                   % Blue: 0
+                                    heatmapImg(i, j, 1) = 0.3 + 0.7 * factor;
+                                    heatmapImg(i, j, 2) = 0;
+                                    heatmapImg(i, j, 3) = 0;
                                 elseif intensity <= 0.66
-                                    % Red to orange (0.33 to 0.66)
                                     factor = (intensity - 0.33) / 0.33;
-                                    heatmapImg(i, j, 1) = 1.0;                % Red: 1.0
-                                    heatmapImg(i, j, 2) = 0.5 * factor;       % Green: 0 → 0.5
-                                    heatmapImg(i, j, 3) = 0;                  % Blue: 0
+                                    heatmapImg(i, j, 1) = 1.0;
+                                    heatmapImg(i, j, 2) = 0.5 * factor;
+                                    heatmapImg(i, j, 3) = 0;
                                 else
-                                    % Orange to yellow (0.66 to 1.0)
                                     factor = (intensity - 0.66) / 0.34;
-                                    heatmapImg(i, j, 1) = 1.0;                % Red: 1.0
-                                    heatmapImg(i, j, 2) = 0.5 + 0.5 * factor; % Green: 0.5 → 1.0
-                                    heatmapImg(i, j, 3) = 0;                  % Blue: 0
+                                    heatmapImg(i, j, 1) = 1.0;
+                                    heatmapImg(i, j, 2) = 0.5 + 0.5 * factor;
+                                    heatmapImg(i, j, 3) = 0;
                                 end
                             end
                         end
@@ -668,7 +1038,7 @@ function AdvancedDifferenceTool
                 end
             end
             
-            % Process decrease regions with cool color gradient (Dark Blue → Blue → Light Blue → Cyan)
+            % Process decrease regions with cool color gradient
             decreaseRegion = decrease & significantChange;
             if any(decreaseRegion(:))
                 intensityMap = zeros(size(gray1));
@@ -676,33 +1046,28 @@ function AdvancedDifferenceTool
                 maxDecreaseIntensity = max(intensityMap(:));
                 
                 if maxDecreaseIntensity > 0
-                    % Normalize intensity from 0 to 1
                     normalizedIntensity = intensityMap / maxDecreaseIntensity;
                     
-                    % Create cool color gradient for each pixel
                     for i = 1:h
                         for j = 1:w
                             if decreaseRegion(i, j)
                                 intensity = normalizedIntensity(i, j);
                                 
                                 if intensity <= 0.33
-                                    % Dark blue to blue (0 to 0.33)
                                     factor = intensity / 0.33;
-                                    heatmapImg(i, j, 1) = 0;                   % Red: 0
-                                    heatmapImg(i, j, 2) = 0;                   % Green: 0
-                                    heatmapImg(i, j, 3) = 0.3 + 0.7 * factor; % Blue: 0.3 → 1.0
+                                    heatmapImg(i, j, 1) = 0;
+                                    heatmapImg(i, j, 2) = 0;
+                                    heatmapImg(i, j, 3) = 0.3 + 0.7 * factor;
                                 elseif intensity <= 0.66
-                                    % Blue to light blue (0.33 to 0.66)
                                     factor = (intensity - 0.33) / 0.33;
-                                    heatmapImg(i, j, 1) = 0.3 * factor;       % Red: 0 → 0.3
-                                    heatmapImg(i, j, 2) = 0.3 * factor;       % Green: 0 → 0.3
-                                    heatmapImg(i, j, 3) = 1.0;                % Blue: 1.0
+                                    heatmapImg(i, j, 1) = 0.3 * factor;
+                                    heatmapImg(i, j, 2) = 0.3 * factor;
+                                    heatmapImg(i, j, 3) = 1.0;
                                 else
-                                    % Light blue to cyan (0.66 to 1.0)
                                     factor = (intensity - 0.66) / 0.34;
-                                    heatmapImg(i, j, 1) = 0.3;                % Red: 0.3
-                                    heatmapImg(i, j, 2) = 0.3 + 0.7 * factor; % Green: 0.3 → 1.0
-                                    heatmapImg(i, j, 3) = 1.0;                % Blue: 1.0
+                                    heatmapImg(i, j, 1) = 0.3;
+                                    heatmapImg(i, j, 2) = 0.3 + 0.7 * factor;
+                                    heatmapImg(i, j, 3) = 1.0;
                                 end
                             end
                         end
@@ -715,7 +1080,7 @@ function AdvancedDifferenceTool
             imshow(heatmapImg);
             title(ax4, sprintf('Heatmap (Warm=Inc, Cool=Dec, Th: %.2f)', currentThreshold), 'FontSize', 11);
             
-            displayStatistics(diff, increase, decrease, significantChange);
+            displayBasicStatistics(diff, increase, decrease, significantChange);
             updateStatus('Thermal heatmap completed!');
             
         catch ME
@@ -740,6 +1105,7 @@ function AdvancedDifferenceTool
             isHeatmapOn = false;
             isIncreaseOnlyOn = false;
             isDecreaseOnlyOn = false;
+            isComprehensiveMode = false;
             
             updateStatus('Calculating highlight...');
             
@@ -762,20 +1128,20 @@ function AdvancedDifferenceTool
             
             updateLamps(hasIncrease, hasDecrease);
             
-            % Create enhanced highlight overlay with pure, bright colors (FILLED regions)
+            % Create enhanced highlight overlay with pure, bright colors
             highlightImg = zeros(size(earlierImg));
             
-            % Increase regions - Pure Bright Yellow (Red + Green) - FILLED
+            % Increase regions - Pure Bright Yellow
             increaseRegion = increase & significantChange;
             if any(increaseRegion(:))
-                highlightImg(:,:,1) = highlightImg(:,:,1) + 1.0 * double(increaseRegion);  % Red component
-                highlightImg(:,:,2) = highlightImg(:,:,2) + 1.0 * double(increaseRegion);  % Green component for yellow
+                highlightImg(:,:,1) = highlightImg(:,:,1) + 1.0 * double(increaseRegion);
+                highlightImg(:,:,2) = highlightImg(:,:,2) + 1.0 * double(increaseRegion);
             end
             
-            % Decrease regions - Pure Bright Red - FILLED
+            % Decrease regions - Pure Bright Red
             decreaseRegion = decrease & significantChange;
             if any(decreaseRegion(:))
-                highlightImg(:,:,1) = highlightImg(:,:,1) + 1.0 * double(decreaseRegion);  % Full red component only
+                highlightImg(:,:,1) = highlightImg(:,:,1) + 1.0 * double(decreaseRegion);
             end
             
             currentHighlightImg = highlightImg;
@@ -783,27 +1149,23 @@ function AdvancedDifferenceTool
             axes(ax4);
             cla(ax4);
             
-            % Use earlier image as base (temporal reference)
+            % Use earlier image as base
             baseImg = earlierImg;
             
-            % Enhanced blending for brighter, more vivid highlights
-            highlightIntensity = 0.8;  % Increased intensity for brighter highlights
+            % Enhanced blending for brighter highlights
+            highlightIntensity = 0.8;
             maskIntensity = max(highlightImg, [], 3);
             
-            % Apply stronger contrast for pure color visibility
             resultImg = baseImg .* (1 - highlightIntensity * maskIntensity) + ...
                         highlightIntensity * highlightImg;
             
-            % Ensure values are within valid range and apply slight gamma correction for brightness
             resultImg = min(max(resultImg, 0), 1);
-            resultImg = resultImg.^0.9;  % Slight gamma correction for brighter appearance
+            resultImg = resultImg.^0.9;
             
             imshow(resultImg);
-            
-            % Updated title with filled regions
             title(ax4, sprintf('Highlight (Yellow=Inc, Red=Dec, Th: %.2f)', currentThreshold), 'FontSize', 11);
             
-            displayStatistics(diff, increase, decrease, significantChange);
+            displayBasicStatistics(diff, increase, decrease, significantChange);
             updateStatus('Highlight completed!');
             
         catch ME
@@ -824,12 +1186,15 @@ function AdvancedDifferenceTool
             isHighlightOn = false;
             isIncreaseOnlyOn = true;
             isDecreaseOnlyOn = false;
+            isComprehensiveMode = false;
             
             % Reset other toggles
             set(heatmapToggle, 'Value', 0);
-            set(heatmapToggle, 'String', 'Heatmap');
+            set(heatmapToggle, 'String', 'Basic Heatmap');
             set(highlightToggle, 'Value', 0);
             set(highlightToggle, 'String', 'Highlight');
+            set(comprehensiveToggle, 'Value', 0);
+            set(comprehensiveToggle, 'String', 'superimposed Map');
             
             % Determine temporal order
             [earlierImg, laterImg, isImg1Earlier] = getTemporalOrder(selectedImg1, selectedImg2);
@@ -844,26 +1209,23 @@ function AdvancedDifferenceTool
             hasIncrease = any(increase(:) & significantChange(:));
             updateLamps(hasIncrease, false);
             
-            % Use earlier image as base for increase-only display
+            % Use earlier image as base
             baseImg = earlierImg;
             highlightImg = zeros(size(earlierImg));
-            % Change increase to yellow (Red + Green components)
-            highlightImg(:,:,1) = 1.0 * double(increase & significantChange);  % Red component for yellow
-            highlightImg(:,:,2) = 1.0 * double(increase & significantChange);  % Green component for yellow
+            highlightImg(:,:,1) = 1.0 * double(increase & significantChange);
+            highlightImg(:,:,2) = 1.0 * double(increase & significantChange);
             
             axes(ax4);
             cla(ax4);
             
-            highlightIntensity = 0.8;  % Increased for brighter display
+            highlightIntensity = 0.8;
             yellowMask = max(highlightImg(:,:,1), highlightImg(:,:,2));
             resultImg = baseImg .* (1 - highlightIntensity * yellowMask) + ...
                         highlightIntensity * highlightImg;
             resultImg = min(max(resultImg, 0), 1);
-            resultImg = resultImg.^0.9;  % Slight gamma correction for brightness
+            resultImg = resultImg.^0.9;
             
             imshow(resultImg);
-            
-            % Updated title for yellow color
             title(ax4, sprintf('Increase Only (Yellow, Th: %.2f)', currentThreshold), 'FontSize', 11);
             
             updateStatus('Increase-only completed!');
@@ -885,12 +1247,15 @@ function AdvancedDifferenceTool
             isHighlightOn = false;
             isIncreaseOnlyOn = false;
             isDecreaseOnlyOn = true;
+            isComprehensiveMode = false;
             
             % Reset other toggles
             set(heatmapToggle, 'Value', 0);
-            set(heatmapToggle, 'String', 'Heatmap');
+            set(heatmapToggle, 'String', 'Basic Heatmap');
             set(highlightToggle, 'Value', 0);
             set(highlightToggle, 'String', 'Highlight');
+            set(comprehensiveToggle, 'Value', 0);
+            set(comprehensiveToggle, 'String', 'superimposed Map');
             
             % Determine temporal order
             [earlierImg, laterImg, isImg1Earlier] = getTemporalOrder(selectedImg1, selectedImg2);
@@ -905,25 +1270,22 @@ function AdvancedDifferenceTool
             hasDecrease = any(decrease(:) & significantChange(:));
             updateLamps(false, hasDecrease);
             
-            % Use earlier image as base for decrease-only display
+            % Use earlier image as base
             baseImg = earlierImg;
             highlightImg = zeros(size(earlierImg));
-            % Change decrease to red (only Red component)
-            highlightImg(:,:,1) = 1.0 * double(decrease & significantChange);  % Pure red for decrease
+            highlightImg(:,:,1) = 1.0 * double(decrease & significantChange);
             
             axes(ax4);
             cla(ax4);
             
-            highlightIntensity = 0.8;  % Increased for brighter display
+            highlightIntensity = 0.8;
             redMask = highlightImg(:,:,1);
             resultImg = baseImg .* (1 - highlightIntensity * redMask) + ...
                         highlightIntensity * highlightImg;
             resultImg = min(max(resultImg, 0), 1);
-            resultImg = resultImg.^0.9;  % Slight gamma correction for brightness
+            resultImg = resultImg.^0.9;
             
             imshow(resultImg);
-            
-            % Updated title for red color
             title(ax4, sprintf('Decrease Only (Red, Th: %.2f)', currentThreshold), 'FontSize', 11);
             
             updateStatus('Decrease-only completed!');
@@ -1012,7 +1374,7 @@ function AdvancedDifferenceTool
                 axes(ax5);
                 cla(ax5);
                 
-                % Show the earlier image (temporal baseline)
+                % Show the earlier image
                 imshow(earlierImg);
                 
                 if isImg1Earlier
@@ -1046,20 +1408,18 @@ function AdvancedDifferenceTool
                 decreaseBoundary = zeros(size(earlierImg));
                 
                 if any(increaseRegion(:))
-                    % Yellow boundaries for increase
                     boundary = bwperim(increaseRegion);
-                    se = strel('disk', 1); % Thinner line
+                    se = strel('disk', 1);
                     boundary = imdilate(boundary, se);
-                    increaseBoundary(:,:,1) = double(boundary); % Red component
-                    increaseBoundary(:,:,2) = double(boundary); % Green component for yellow
+                    increaseBoundary(:,:,1) = double(boundary);
+                    increaseBoundary(:,:,2) = double(boundary);
                 end
                 
                 if any(decreaseRegion(:))
-                    % Red boundaries for decrease
                     boundary = bwperim(decreaseRegion);
-                    se = strel('disk', 1); % Thinner line
+                    se = strel('disk', 1);
                     boundary = imdilate(boundary, se);
-                    decreaseBoundary(:,:,1) = double(boundary); % Red component only
+                    decreaseBoundary(:,:,1) = double(boundary);
                 end
                 
                 % Combine boundaries
@@ -1107,8 +1467,8 @@ function AdvancedDifferenceTool
             updateStatus('Creating GIF animation...');
             
             % Parameters for GIF
-            delayTime = get(flickSpeedSlider, 'Value'); % Use current flick speed
-            numCycles = 3; % Number of complete cycles to include
+            delayTime = get(flickSpeedSlider, 'Value');
+            numCycles = 3;
             
             % Get temporal order and calculate differences
             [earlierImg, laterImg, isImg1Earlier] = getTemporalOrder(selectedImg1, selectedImg2);
@@ -1129,25 +1489,23 @@ function AdvancedDifferenceTool
             increaseRegion = increase & significantChange;
             decreaseRegion = decrease & significantChange;
             
-            % Create boundaries with thinner lines
+            % Create boundaries
             increaseBoundary = zeros(size(earlierImg));
             decreaseBoundary = zeros(size(earlierImg));
             
             if any(increaseRegion(:))
-                % Yellow boundaries for increase
                 boundary = bwperim(increaseRegion);
-                se = strel('disk', 1); % Thinner line
+                se = strel('disk', 1);
                 boundary = imdilate(boundary, se);
-                increaseBoundary(:,:,1) = double(boundary); % Red component
-                increaseBoundary(:,:,2) = double(boundary); % Green component for yellow
+                increaseBoundary(:,:,1) = double(boundary);
+                increaseBoundary(:,:,2) = double(boundary);
             end
             
             if any(decreaseRegion(:))
-                % Red boundaries for decrease
                 boundary = bwperim(decreaseRegion);
-                se = strel('disk', 1); % Thinner line
+                se = strel('disk', 1);
                 boundary = imdilate(boundary, se);
-                decreaseBoundary(:,:,1) = double(boundary); % Red component only
+                decreaseBoundary(:,:,1) = double(boundary);
             end
             
             % Combine boundaries
@@ -1165,11 +1523,9 @@ function AdvancedDifferenceTool
             frameIndex = 1;
             
             for cycle = 1:numCycles
-                % Frame 1: Earlier image
                 frames{frameIndex} = im2uint8(earlierImg);
                 frameIndex = frameIndex + 1;
                 
-                % Frame 2: Overlay with boundaries
                 frames{frameIndex} = im2uint8(overlayWithBoundaries);
                 frameIndex = frameIndex + 1;
             end
@@ -1243,6 +1599,20 @@ function AdvancedDifferenceTool
                 exportData.metaData = metaData;
                 exportData.currentThreshold = currentThreshold;
                 exportData.analysisDateTime = datetime('now');
+                exportData.analysisMode = 'unknown';
+                
+                % Determine current analysis mode
+                if isComprehensiveMode
+                    exportData.analysisMode = 'comprehensive';
+                elseif isHeatmapOn
+                    exportData.analysisMode = 'basicHeatmap';
+                elseif isHighlightOn
+                    exportData.analysisMode = 'highlight';
+                elseif isIncreaseOnlyOn
+                    exportData.analysisMode = 'increaseOnly';
+                elseif isDecreaseOnlyOn
+                    exportData.analysisMode = 'decreaseOnly';
+                end
                 
                 save(fullpath, 'exportData');
                 
@@ -1255,7 +1625,7 @@ function AdvancedDifferenceTool
         end
     end
     
-    function displayStatistics(diff, increase, decrease, significantChange)
+    function displayBasicStatistics(diff, increase, decrease, significantChange)
         totalPixels = numel(diff);
         changedPixels = sum(significantChange(:));
         increasedPixels = sum(increase(:) & significantChange(:));
@@ -1303,15 +1673,20 @@ function AdvancedDifferenceTool
             isHighlightOn = false;
             isIncreaseOnlyOn = false;
             isDecreaseOnlyOn = false;
+            isComprehensiveMode = false;
             
             % Reset UI controls
             if isvalid(heatmapToggle)
                 set(heatmapToggle, 'Value', 0);
-                set(heatmapToggle, 'String', 'Heatmap');
+                set(heatmapToggle, 'String', 'Basic Heatmap');
             end
             if isvalid(highlightToggle)
                 set(highlightToggle, 'Value', 0);
                 set(highlightToggle, 'String', 'Highlight');
+            end
+            if isvalid(comprehensiveToggle)
+                set(comprehensiveToggle, 'Value', 0);
+                set(comprehensiveToggle, 'String', 'superimposed Map');
             end
             
             updateLamps(false, false);
