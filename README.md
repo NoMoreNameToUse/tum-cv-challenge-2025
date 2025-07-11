@@ -51,4 +51,10 @@ GUI V0.2:
 * Cleaned up some internal copy pasta variable and GUI update sequence
 
 GUI V0.3: 
+Achieved feature parity with Kai's Revamped GUI and implemented new features
 * Implemented slider view from Kai's GUI Revamp with original code from Rongfei
+* Implemented side by side view from Kai's GUI Revamp with original code from Rongfei
+* Implemented timelapse view from Kai's GUI Revamp with original code from Rongfei
+* Implemented difference highlight view from Kai's GUI Revamp with updated code from Zihan
+* Implemented heatmap view from Kai's GUI Revamp with updated code from Zihan
+* Implemented flicker view from Kai's GUI Revamp with updated code from Zihan
