@@ -1,5 +1,3 @@
-% Docs: By Martin, branch main, commit 6c9757ae96306c14057f532a7159df33619ca35c
-
 function croppedImgs = cropToCommonRegion(imgs)
     if isempty(imgs)
         error('Keine Bilder übergeben.');
