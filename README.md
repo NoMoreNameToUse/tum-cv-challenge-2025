@@ -6,6 +6,10 @@ This branch contains the submission code from **Team 25** for the **Satellite Im
 
 ## Getting Started
 
+### 0. Requirements 
+
+This application is written in MATLAB and utilizes the Computer Vision and Signal Processing toolbox from MATLAB.
+
 ### 1. Clone the Repository
 
 ```bash
@@ -17,7 +21,7 @@ git clone https://github.com/NoMoreNameToUse/tum-cv-challenge-2025.git
 * Open run_cv_app.m in MATLAB.
 * Run the script. The GUI should launch shortly.
 
-The GUI should work on both windows and macos and is tested to work from version MATLAB R2024b upwards
+The GUI should work on both windows and macos and is tested to work from version MATLAB R2024b upwards and MATLAB Online
 
 ## GUI Feature Overview
 ![Dashboard Main GUI](docs/documentation/IMG/dashboardMainGUI.png)
